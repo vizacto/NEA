@@ -1,0 +1,2480 @@
+from tkinter import *  # Importing Tkinter to Create a GUI
+from tkinter import ttk  # Importing Rest of Tkinter Library for Functions Like ComboBox, Entry, Check, etc.
+import matplotlib.pyplot as plt  # Importing Libraries From MatPlotLib to Display Functions
+import numpy as np  # Importing Numpy to be Able to Use Mathematical Functions like Sine, Cosine, Hyperbolics, etc.
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg  # For Tkinter & MatPlotLib Compatibility
+
+import tkinter as tk
+
+# To Restart Python Script
+import os
+import sys
+import csv  # To Read/Write From File
+from tkinter import simpledialog  # To Create Pop-Up Entry Box
+
+# Constants
+FONT_FAMILY = "Helvetica"
+SAVED_FUNCTIONS_PATH = "./saved_functions.csv"
+
+integral_function = ""
+
+class MainApplication(tk.Frame):
+    def __init__(self, master, *args, **kwargs):
+        tk.Frame.__init__(self, master, *args, **kwargs)
+        self.master = master
+        self.config_gui()
+        self.create_widgets()
+
+        self.cb_Initial.bind("<<ComboboxSelected>>", self.function_changed)
+
+    def config_gui(self):
+        self.master.title("NEA Computer Science Project - Definite Integral Solver")  # Setting Title for Window
+        self.master.geometry("1920x1080")  # Setting Size For Window
+        self.master.resizable(False, False)  # Removing Permission for User to Resize Window
+
+    def create_widgets(self):
+        lbl = Label(self.master, text="Integral Solving & Graphing Tool", font=(FONT_FAMILY, 30))  # Setting Title for Interface
+        lbl.place(x=738, y=30)  # Defining Location of Label
+
+        lbl1 = Label(self.master, text="Pick Type of Function: ", font=(FONT_FAMILY, 15))  # Creating New Label
+        lbl1.place(x=60, y=120)  # Defining Location of Label
+
+        self.cb_Initial = StringVar()  # Declaring ComboBox as String (Drop-Down Menu)
+        data = ("Polynomial", "Trigonometric Function", "Exponential", "Logarithmic", "Linear", "Saved Functions")  # Defining Data Values
+        self.cb_Initial = ttk.Combobox(self.master, values=data, state="readonly", textvariable=self.cb_Initial)  # Configuring Drop-Down Menu
+        self.cb_Initial.place(x=60, y=150)  # Defining Location of the Drop-Down Menu
+
+        btn = Button(
+            self.master, text="Clear", bd="5", command=lambda: [self.master.destroy, os.execl(sys.executable, sys.executable, *sys.argv)]
+        )  # Creating Button to Clear Tkinter and Restart Python Program
+        btn.place(x=20, y=20)  # Defining Location for Button        
+
+        bound_1 = StringVar()  # Defining Input Field as String
+        bound_1 = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=bound_1)  # Defining New Entry Box for the Lower Bound
+        bound_1.place(x=60, y=500)  # Defining Location for Entry Box
+
+        lbl_UB = Label(self.master, text="UB")  # Creating New Label
+        lbl_UB.place(x=65, y=480)  # Defining Location for Label
+
+        bound_2 = StringVar()  # Defining Input Field as String
+        bound_2 = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=bound_2)  # Defining New Entry Box for the Lower Bound
+        bound_2.place(x=115, y=500)  # Defining Location for Entry Box
+
+        lbl_LB = Label(self.master, text="LB")  # Creating New Label
+        lbl_LB.place(x=120, y=480)  # Defining Location for Label
+
+        integrate_btn = Button(
+            self.master, text="Integrate", bd="5", command=lambda: self.integrate(integral_function, float(bound_1.get()), float(bound_2.get()))
+        )  # Creating Button to Feed Values into the Integrate Function
+        integrate_btn.place(x=170, y=500)  # Defining Location for the Button
+
+    def integrate(self, f, b, a):  # Defining Function to Integrate the Functions
+        x = np.arange(-10, 10, 0.1)  # Spacing Numbers on Axis
+        y = eval(f)  # Assigning Function
+        fig = plt.figure()  # Creating Figure
+
+        plot = fig.add_subplot(1, 1, 1)  # Defining Plot
+        plot.plot(x, y, "#2C5F2DFF")  # Plotting Function
+
+        plot.fill_between(x, y, where=(x <= b) & (x >= a), color="#EED971FF")  # Shading Region
+        plot.grid()  # Plotting Grid
+
+        canvas = FigureCanvasTkAgg(fig, self.master)  # Creating Canvas & Displaying Function on Window
+        canvas.get_tk_widget().place(x=600, y=100)  # Setting Position for Canvas
+
+        x = np.linspace(a, b, 9999999)  # Specifying Interval for Function
+        f = eval(f)  # Evaluating function
+        area = np.sum(f) * (b - a) / 9999999  # Calculating a Numerical Estimate of the Area
+
+        area_label = Label(self.master, text=("Approximate area = " + str(round(area, 2))), font=(FONT_FAMILY, 23))  # Creating Label to Display Area
+        area_label.place(x=60, y=550)  # Defining Location of Label
+
+    def function_changed(self, event):  # Defining New Event When Item is Picked Within the Drop-Down Menu
+        if self.cb_Initial.get() == "Polynomial":  # Setting a Condition if 'Polynomial' is Selected
+            lbl2 = Label(self.master, text="Pick Degree of Polynomial: ", font=(FONT_FAMILY, 15))  # Creating New Label
+            lbl2.place(x=60, y=190)  # Defining Location for Label
+            cb_polynomial = StringVar()  # Declaring cb_polynomial as String (Drop-Down Menu)
+            data1 = ("2nd", "3rd", "4th", "5th", "6th")  # Defining Data Values
+            cb_polynomial = ttk.Combobox(self.master, values=data1, state="readonly", textvariable=cb_polynomial)  # Configuring Drop-Down Menu
+            cb_polynomial.place(x=60, y=220)  # Defining Location of the Drop-Down Menu
+
+            def degree_picked(event):  # Defining New Event When Degree of Polynomial is Picked
+                if cb_polynomial.get() == "2nd":  # Setting a Condition if '2nd' is Selected
+
+                    def submit():  # Creating New Function When 'Confirm' Button is Clicked
+                        first_var = float(first_var_entry.get())  # Retrieving Input From 'first_var_entry'
+                        second_var = float(second_var_entry.get())  # Retrieving Input From 'second_var_entry'
+                        third_var = float(third_var_entry.get())  # Retrieving Input From 'third_var_entry'
+
+                        x = np.arange(-10, 10, 0.1)  # Spacing Numbers on Axis
+                        y = (first_var * x**2) + (second_var * x) + third_var  # Creating Function Using Retrieved Values
+
+                        # Defining Global Integral Function
+                        global integral_function
+                        integral_function = "(" + str(first_var) + " * x**2) + (" + str(second_var) + " * x) + " + str(third_var)  # Turning Function into String
+
+                        fig = plt.figure()  # Creating Figure
+
+                        plot = fig.add_subplot(1, 1, 1)  # Defining Plot
+                        plot.plot(x, y, "#2C5F2DFF")  # Plotting Function
+
+                        plot.grid()  # Plotting Grid
+
+                        canvas = FigureCanvasTkAgg(fig, self.master)  # Creating Canvas & Displaying Function on Window
+                        canvas.get_tk_widget().place(x=600, y=100)  # Setting Position for Canvas
+
+                    def save(a, b, c):  # Creating New Function to Save Functions
+                        name = simpledialog.askstring(title="Naming Function", prompt="What would you like to call this function?:")  # Making Pop-Up Box for Naming Function
+
+                        textfile = open(SAVED_FUNCTIONS_PATH, "a", encoding="UTF8", newline="")  # Opening CSV File to Append New Function
+                        writer = csv.writer(textfile)  # Allowing Writing Compatibilities
+                        data = [name, "polynomial", "2", "NA", "NA", str(a), str(b), str(c), "NA", "NA", "NA", "NA"]  # Data to be Written in File
+                        writer.writerow(data)  # Adding New Function
+
+                    lbl3 = Label(self.master, text="Enter Constants for 2nd Degree Polynomial: ", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl3.place(x=60, y=260)  # Defining Location for Label
+
+                    first_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                    first_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=first_var_entry)  # Defining New Entry Box for Constant 'a'
+                    first_var_entry.place(x=60, y=320)  # Defining Location for Entry Box
+
+                    second_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                    second_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=second_var_entry)  # Defining New Entry Box for Constant 'b'
+                    second_var_entry.place(x=115, y=320)  # Defining Location for Entry Box
+
+                    third_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                    third_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=third_var_entry)  # Defining New Entry Box for Constant 'c'
+                    third_var_entry.place(x=170, y=320)  # Defining Location for Entry Box
+
+                    lbl_a = Label(self.master, text="a", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl_a.place(x=75, y=300)  # Defining Location for Label
+                    lbl_b = Label(self.master, text="b", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl_b.place(x=125, y=300)  # Defining Location for Label
+                    lbl_c = Label(self.master, text="c", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl_c.place(x=180, y=300)  # Defining Location for Label
+
+                    confirm_btn = Button(self.master, text="Confirm", command=submit, font=(FONT_FAMILY, 15))  # Creating Confirm Button
+                    confirm_btn.place(x=210, y=320)  # Defining Location for Confirm Button
+
+                    btn = Button(
+                        self.master, text="Save", bd="5", command=lambda: save(float(first_var_entry.get()), float(second_var_entry.get()), float(third_var_entry.get()))
+                    )  # Creating Button to Save Function
+                    btn.place(x=100, y=20)  # Defining Location for Button
+
+                elif cb_polynomial.get() == "3rd":  # Setting Condition if '3rd' is Selected
+
+                    def submit():  # Creating New Function When 'Confirm' Button is Clicked
+                        first_var = float(first_var_entry.get())  # Retrieving Input From 'first_var_entry'
+                        second_var = float(second_var_entry.get())  # Retrieving Input From 'second_var_entry'
+                        third_var = float(third_var_entry.get())  # Retrieving Input From 'third_var_entry'
+                        fourth_var = float(fourth_var_entry.get())  # Retrieving Input From 'fourth_var_entry'
+
+                        x = np.arange(-10, 10, 0.1)  # Spacing Numbers on Axis
+                        y = (first_var * x**3) + (second_var * x**2) + (third_var * x) + fourth_var  # Creating Function Using Retrieved Values
+
+                        # Defining Global Integral Function
+                        global integral_function
+                        integral_function = "(" + str(first_var) + " * x**3) + (" + str(second_var) + " * x**2) + (" + str(third_var) + " * x) + " + str(fourth_var)  # Turning Function into String
+                        fig = plt.figure()  # Creating Figure
+
+                        plot = fig.add_subplot(1, 1, 1)  # Defining Plot
+                        plot.plot(x, y, "#2C5F2DFF")  # Plotting Function
+
+                        plot.grid()  # Plotting Grid
+
+                        canvas = FigureCanvasTkAgg(fig, self.master)  # Creating Canvas & Displaying Function on Window
+                        canvas.get_tk_widget().place(x=600, y=100)  # Setting Position for Canvas
+
+                    def save(a, b, c, d):  # Creating New Function to Save Functions
+                        name = simpledialog.askstring(title="Naming Function", prompt="What would you like to call this function?:")  # Making Pop-Up Box for Naming Function
+
+                        textfile = open(SAVED_FUNCTIONS_PATH, "a", encoding="UTF8", newline="")  # Opening CSV File to Append New Function
+                        writer = csv.writer(textfile)  # Allowing Writing Compatibilities
+                        data = [name, "polynomial", "2", "NA", "NA", str(a), str(b), str(c), str(d), "NA", "NA", "NA"]  # Data to be Written in File
+                        writer.writerow(data)  # Adding New Function
+
+                    lbl3 = Label(self.master, text="Enter Constants for 2nd Degree Polynomial: ", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl3.place(x=60, y=260)  # Defining Location for Label
+
+                    first_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                    first_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=first_var_entry)  # Defining New Entry Box for Constant 'a'
+                    first_var_entry.place(x=60, y=320)  # Defining Location for Entry Box
+
+                    second_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                    second_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=second_var_entry)  # Defining New Entry Box for Constant 'b'
+                    second_var_entry.place(x=115, y=320)  # Defining Location for Entry Box
+
+                    third_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                    third_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=third_var_entry)  # Defining New Entry Box for Constant 'c'
+                    third_var_entry.place(x=170, y=320)  # Defining Location for Entry Box
+
+                    fourth_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                    fourth_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=fourth_var_entry)  # Defining New Entry Box for Constant 'd'
+                    fourth_var_entry.place(x=225, y=320)  # Defining Location for Entry Box
+
+                    lbl_a = Label(self.master, text="a", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl_a.place(x=75, y=300)  # Defining Location for Label
+                    lbl_b = Label(self.master, text="b", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl_b.place(x=125, y=300)  # Defining Location for Label
+                    lbl_c = Label(self.master, text="c", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl_c.place(x=180, y=300)  # Defining Location for Label
+                    lbl_d = Label(self.master, text="d", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl_d.place(x=235, y=300)  # Defining Location for Label
+
+                    confirm_btn = Button(self.master, text="Confirm", command=submit, font=(FONT_FAMILY, 15))  # Creating Confirm Button
+                    confirm_btn.place(x=265, y=320)  # Defining Location for Confirm Button
+
+                    btn = Button(
+                        self.master, text="Save", bd="5", command=lambda: save(float(first_var_entry.get()), float(second_var_entry.get()), float(third_var_entry.get()), float(fourth_var_entry.get()))
+                    )  # Creating Button to Save Function
+                    btn.place(x=100, y=20)  # Defining Location for Button
+
+                elif cb_polynomial.get() == "4th":  # Setting Condition if '3rd' is Selected
+
+                    def submit():  # Creating New Function When 'Confirm' Button is Clicked
+                        first_var = float(first_var_entry.get())  # Retrieving Input From 'first_var_entry'
+                        second_var = float(second_var_entry.get())  # Retrieving Input From 'second_var_entry'
+                        third_var = float(third_var_entry.get())  # Retrieving Input From 'third_var_entry'
+                        fourth_var = float(fourth_var_entry.get())  # Retrieving Input From 'fourth_var_entry'
+                        fifth_var = float(fifth_var_entry.get())  # Retrieving Input From 'fifth_var_entry'
+
+                        x = np.arange(-10, 10, 0.1)  # Spacing Numbers on Axis
+                        y = (first_var * x**4) + (second_var * x**3) + (third_var * x**2) + (fourth_var * x) + fifth_var  # Creating Function Using Retrieved Values
+
+                        # Defining Global Integral Function
+                        global integral_function
+                        integral_function = f"({first_var} * x**4) + ({second_var} * x**3) + ({third_var} * x**2) + ({fourth_var} * x) + {fifth_var}"  # Turning Function into String
+
+                        fig = plt.figure()  # Creating Figure
+                        plot = fig.add_subplot(1, 1, 1)  # Defining Plot
+                        plot.plot(x, y, "#2C5F2DFF")  # Plotting Function
+
+                        plot.grid()  # Plotting Grid
+
+                        canvas = FigureCanvasTkAgg(fig, self.master)  # Creating Canvas & Displaying Function on Window
+                        canvas.get_tk_widget().place(x=600, y=100)  # Setting Position for Canvas
+
+                    def save(a, b, c, d, e):  # Creating New Function to Save Functions
+                        name = simpledialog.askstring(title="Naming Function", prompt="What would you like to call this function?:")  # Making Pop-Up Box for Naming Function
+
+                        textfile = open(SAVED_FUNCTIONS_PATH, "a", encoding="UTF8", newline="")  # Opening CSV File to Append New Function
+                        writer = csv.writer(textfile)  # Allowing Writing Compatibilities
+                        data = [name, "polynomial", "2", "NA", "NA", str(a), str(b), str(c), str(d), str(e), "NA", "NA"]  # Data to be Written in File
+                        writer.writerow(data)  # Adding New Function
+
+                    lbl3 = Label(self.master, text="Enter Constants for 2nd Degree Polynomial: ", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl3.place(x=60, y=260)  # Defining Location for Label
+
+                    first_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                    first_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=first_var_entry)  # Defining New Entry Box for Constant 'a'
+                    first_var_entry.place(x=60, y=320)  # Defining Location for Entry Box
+
+                    second_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                    second_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=second_var_entry)  # Defining New Entry Box for Constant 'b'
+                    second_var_entry.place(x=115, y=320)  # Defining Location for Entry Box
+
+                    third_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                    third_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=third_var_entry)  # Defining New Entry Box for Constant 'c'
+                    third_var_entry.place(x=170, y=320)  # Defining Location for Entry Box
+
+                    fourth_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                    fourth_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=fourth_var_entry)  # Defining New Entry Box for Constant 'd'
+                    fourth_var_entry.place(x=225, y=320)  # Defining Location for Entry Box
+
+                    fifth_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                    fifth_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=fifth_var_entry)  # Defining New Entry Box for Constant 'e'
+                    fifth_var_entry.place(x=280, y=320)  # Defining Location for Entry Box
+
+                    lbl_a = Label(self.master, text="a", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl_a.place(x=75, y=300)  # Defining Location for Label
+                    lbl_b = Label(self.master, text="b", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl_b.place(x=125, y=300)  # Defining Location for Label
+                    lbl_c = Label(self.master, text="c", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl_c.place(x=180, y=300)  # Defining Location for Label
+                    lbl_d = Label(self.master, text="d", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl_d.place(x=235, y=300)  # Defining Location for Label
+                    lbl_e = Label(self.master, text="e", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl_e.place(x=290, y=300)  # Defining Location for Label
+
+                    confirm_btn = Button(self.master, text="Confirm", command=submit, font=(FONT_FAMILY, 15))  # Creating Confirm Button
+                    confirm_btn.place(x=345, y=320)  # Defining Location for Confirm Button
+
+                    btn = Button(
+                        self.master,
+                        text="Save",
+                        bd="5",
+                        command=lambda: save(float(first_var_entry.get()), float(second_var_entry.get()), float(third_var_entry.get()), float(fourth_var_entry.get()), float(fifth_var_entry.get())),
+                    )  # Creating Button to Save Function
+                    btn.place(x=100, y=20)  # Defining Location for Button
+
+                elif cb_polynomial.get() == "5th":  # Setting Condition if '3rd' is Selected
+
+                    def submit():  # Creating New Function When 'Confirm' Button is Clicked
+                        first_var = float(first_var_entry.get())  # Retrieving Input From 'first_var_entry'
+                        second_var = float(second_var_entry.get())  # Retrieving Input From 'second_var_entry'
+                        third_var = float(third_var_entry.get())  # Retrieving Input From 'third_var_entry'
+                        fourth_var = float(fourth_var_entry.get())  # Retrieving Input From 'fourth_var_entry'
+                        fifth_var = float(fifth_var_entry.get())  # Retrieving Input From 'fifth_var_entry'
+                        sixth_var = float(sixth_var_entry.get())  # Retrieving Input From 'sixth_var_entry'
+
+                        x = np.arange(-10, 10, 0.1)  # Spacing Numbers on Axis
+                        y = (first_var * x**5) + (second_var * x**4) + (third_var * x**3) + (fourth_var * x**2) + (fifth_var * x) + sixth_var  # Creating Function Using Retrieved Values
+
+                        # Defining Global Integral Function
+                        global integral_function
+                        integral_function = (
+                            "("
+                            + str(first_var)
+                            + " * x**5) + ("
+                            + str(second_var)
+                            + " * x**4) + ("
+                            + str(third_var)
+                            + " * x**3) + ("
+                            + str(fourth_var)
+                            + " * x**2) + ("
+                            + str(fifth_var)
+                            + " * x) + "
+                            + str(sixth_var)
+                        )  # Turning Function into String
+
+                        fig = plt.figure()  # Creating Figure
+                        plot = fig.add_subplot(1, 1, 1)  # Defining Plot
+                        plot.plot(x, y, "#2C5F2DFF")  # Plotting Function
+
+                        plot.grid()  # Plotting Grid
+
+                        canvas = FigureCanvasTkAgg(fig, self.master)  # Creating Canvas & Displaying Function on Window
+                        canvas.get_tk_widget().place(x=600, y=100)  # Setting Position for Canvas
+
+                    def save(a, b, c, d, e, f):  # Creating New Function to Save Functions
+                        name = simpledialog.askstring(title="Naming Function", prompt="What would you like to call this function?:")  # Making Pop-Up Box for Naming Function
+
+                        textfile = open(SAVED_FUNCTIONS_PATH, "a", encoding="UTF8", newline="")  # Opening CSV File to Append New Function
+                        writer = csv.writer(textfile)  # Allowing Writing Compatibilities
+                        data = [name, "polynomial", "2", "NA", "NA", str(a), str(b), str(c), str(d), str(e), str(f), "NA"]  # Data to be Written in File
+                        writer.writerow(data)  # Adding New Function
+
+                    lbl3 = Label(self.master, text="Enter Constants for 2nd Degree Polynomial: ", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl3.place(x=60, y=260)  # Defining Location for Label
+
+                    first_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                    first_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=first_var_entry)  # Defining New Entry Box for Constant 'a'
+                    first_var_entry.place(x=60, y=320)  # Defining Location for Entry Box
+
+                    second_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                    second_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=second_var_entry)  # Defining New Entry Box for Constant 'b'
+                    second_var_entry.place(x=115, y=320)  # Defining Location for Entry Box
+
+                    third_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                    third_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=third_var_entry)  # Defining New Entry Box for Constant 'c'
+                    third_var_entry.place(x=170, y=320)  # Defining Location for Entry Box
+
+                    fourth_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                    fourth_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=fourth_var_entry)  # Defining New Entry Box for Constant 'd'
+                    fourth_var_entry.place(x=225, y=320)  # Defining Location for Entry Box
+
+                    fifth_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                    fifth_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=fifth_var_entry)  # Defining New Entry Box for Constant 'e'
+                    fifth_var_entry.place(x=280, y=320)  # Defining Location for Entry Box
+
+                    sixth_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                    sixth_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=sixth_var_entry)  # Defining New Entry Box for Constant 'f'
+                    sixth_var_entry.place(x=335, y=320)  # Defining Location for Entry Box
+
+                    lbl_a = Label(self.master, text="a", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl_a.place(x=75, y=300)  # Defining Location for Label
+                    lbl_b = Label(self.master, text="b", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl_b.place(x=125, y=300)  # Defining Location for Label
+                    lbl_c = Label(self.master, text="c", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl_c.place(x=180, y=300)  # Defining Location for Label
+                    lbl_d = Label(self.master, text="d", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl_d.place(x=235, y=300)  # Defining Location for Label
+                    lbl_e = Label(self.master, text="e", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl_e.place(x=290, y=300)  # Defining Location for Label
+                    lbl_f = Label(self.master, text="f", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl_f.place(x=345, y=300)  # Defining Location for Label
+
+                    confirm_btn = Button(self.master, text="Confirm", command=submit, font=(FONT_FAMILY, 15))  # Creating Confirm Button
+                    confirm_btn.place(x=400, y=320)  # Defining Location for Confirm Button
+
+                    btn = Button(
+                        self.master,
+                        text="Save",
+                        bd="5",
+                        command=lambda: save(
+                            float(first_var_entry.get()),
+                            float(second_var_entry.get()),
+                            float(third_var_entry.get()),
+                            float(fourth_var_entry.get()),
+                            float(fifth_var_entry.get()),
+                            float(sixth_var_entry.get()),
+                        ),
+                    )  # Creating Button to Save Function
+                    btn.place(x=100, y=20)  # Defining Location for Button
+
+                elif cb_polynomial.get() == "6th":  # Setting Condition if '3rd' is Selected
+
+                    def submit():  # Creating New Function When 'Confirm' Button is Clicked
+                        first_var = float(first_var_entry.get())  # Retrieving Input From 'first_var_entry'
+                        second_var = float(second_var_entry.get())  # Retrieving Input From 'second_var_entry'
+                        third_var = float(third_var_entry.get())  # Retrieving Input From 'third_var_entry'
+                        fourth_var = float(fourth_var_entry.get())  # Retrieving Input From 'fourth_var_entry'
+                        fifth_var = float(fifth_var_entry.get())  # Retrieving Input From 'fifth_var_entry'
+                        sixth_var = float(sixth_var_entry.get())  # Retrieving Input From 'sixth_var_entry'
+                        seventh_var = float(seventh_var_entry.get())  # Retrieving Input From 'seventh_var_entry'
+
+                        x = np.arange(-10, 10, 0.1)  # Spacing Numbers on Axis
+                        y = (
+                            (first_var * x**6) + (second_var * x**5) + (third_var * x**4) + (fourth_var * x**3) + (fifth_var * x**2) + (sixth_var * x) + seventh_var
+                        )  # Creating Function Using Retrieved Values
+
+                        # Defining Global Integral Function
+                        global integral_function
+                        integral_function = (
+                            "("
+                            + str(first_var)
+                            + " * x**6) + ("
+                            + str(second_var)
+                            + " * x**5) + ("
+                            + str(third_var)
+                            + " * x**4) + ("
+                            + str(fourth_var)
+                            + " * x**3) + ("
+                            + str(fifth_var)
+                            + " * x**2) + ("
+                            + str(sixth_var)
+                            + " * x) + "
+                            + str(seventh_var)
+                        )  # Turning Function into String
+
+                        fig = plt.figure()  # Creating Figure
+                        plot = fig.add_subplot(1, 1, 1)  # Defining Plot
+                        plot.plot(x, y, "#2C5F2DFF")  # Plotting Function
+
+                        plot.grid()  # Plotting Grid
+
+                        canvas = FigureCanvasTkAgg(fig, self.master)  # Creating Canvas & Displaying Function on Window
+                        canvas.get_tk_widget().place(x=600, y=100)  # Setting Position for Canvas
+
+                    def save(a, b, c, d, e, f, g):  # Creating New Function to Save Functions
+                        name = simpledialog.askstring(title="Naming Function", prompt="What would you like to call this function?:")  # Making Pop-Up Box for Naming Function
+
+                        textfile = open(SAVED_FUNCTIONS_PATH, "a", encoding="UTF8", newline="")  # Opening CSV File to Append New Function
+                        writer = csv.writer(textfile)  # Allowing Writing Compatibilities
+                        data = [name, "polynomial", "2", "NA", "NA", str(a), str(b), str(c), str(d), str(e), str(f), str(g)]  # Data to be Written in File
+                        writer.writerow(data)  # Adding New Function
+
+                    lbl3 = Label(self.master, text="Enter Constants for 2nd Degree Polynomial: ", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl3.place(x=60, y=260)  # Defining Location for Label
+
+                    first_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                    first_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=first_var_entry)  # Defining New Entry Box for Constant 'a'
+                    first_var_entry.place(x=60, y=320)  # Defining Location for Entry Box
+
+                    second_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                    second_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=second_var_entry)  # Defining New Entry Box for Constant 'b'
+                    second_var_entry.place(x=115, y=320)  # Defining Location for Entry Box
+
+                    third_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                    third_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=third_var_entry)  # Defining New Entry Box for Constant 'c'
+                    third_var_entry.place(x=170, y=320)  # Defining Location for Entry Box
+
+                    fourth_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                    fourth_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=fourth_var_entry)  # Defining New Entry Box for Constant 'd'
+                    fourth_var_entry.place(x=225, y=320)  # Defining Location for Entry Box
+
+                    fifth_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                    fifth_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=fifth_var_entry)  # Defining New Entry Box for Constant 'e'
+                    fifth_var_entry.place(x=280, y=320)  # Defining Location for Entry Box
+
+                    sixth_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                    sixth_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=sixth_var_entry)  # Defining New Entry Box for Constant 'f'
+                    sixth_var_entry.place(x=335, y=320)  # Defining Location for Entry Box
+
+                    seventh_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                    seventh_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=seventh_var_entry)  # Defining New Entry Box for Constant 'g'
+                    seventh_var_entry.place(x=390, y=320)  # Defining Location for Entry Box
+
+                    lbl_a = Label(self.master, text="a", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl_a.place(x=75, y=300)  # Defining Location for Label
+                    lbl_b = Label(self.master, text="b", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl_b.place(x=125, y=300)  # Defining Location for Label
+                    lbl_c = Label(self.master, text="c", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl_c.place(x=180, y=300)  # Defining Location for Label
+                    lbl_d = Label(self.master, text="d", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl_d.place(x=235, y=300)  # Defining Location for Label
+                    lbl_e = Label(self.master, text="e", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl_e.place(x=290, y=300)  # Defining Location for Label
+                    lbl_f = Label(self.master, text="f", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl_f.place(x=345, y=300)  # Defining Location for Label
+                    lbl_g = Label(self.master, text="g", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl_g.place(x=400, y=300)  # Defining Location for Label
+
+                    confirm_btn = Button(self.master, text="Confirm", command=submit, font=(FONT_FAMILY, 15))  # Creating Confirm Button
+                    confirm_btn.place(x=455, y=320)  # Defining Location for Confirm Button
+
+                    btn = Button(
+                        self.master,
+                        text="Save",
+                        bd="5",
+                        command=lambda: save(
+                            float(first_var_entry.get()),
+                            float(second_var_entry.get()),
+                            float(third_var_entry.get()),
+                            float(fourth_var_entry.get()),
+                            float(fifth_var_entry.get()),
+                            float(sixth_var_entry.get()),
+                            float(seventh_var_entry.get()),
+                        ),
+                    )  # Creating Button to Save Function
+                    btn.place(x=100, y=20)  # Defining Location for Button
+
+            cb_polynomial.bind("<<ComboboxSelected>>", degree_picked)  # Binding Change to Polynomial ComboBox to Run 'degree_picked'
+
+        elif self.cb_Initial.get() == "Trigonometric Function":  # Setting a Condition if 'Trigonometric Function' is Selected
+            lbl2 = Label(self.master, text="Pick Set of Trig Functions: ", font=(FONT_FAMILY, 15))  # Creating New Label
+            lbl2.place(x=60, y=190)  # Defining Location for Label
+            cb_trig = StringVar()  # Declaring cb_trig as String (Drop-Down Menu)
+            data1 = ("Ordinary", "Hyperbolics")  # Defining Data Values
+            cb_trig = ttk.Combobox(self.master, values=data1, state="readonly", textvariable=cb_trig)  # Configuring Drop-Down Menu
+            cb_trig.place(x=60, y=220)  # Defining Location of the Drop-Down Menu
+
+            def set_picked(event):  # Creating Function to Identify Type of Trig Function
+                if cb_trig.get() == "Ordinary":  # Setting Condition if the Trig Function is Ordinary
+                    set_type = "Ordinary"
+                elif cb_trig.get() == "Hyperbolics":  # Setting Condition if the Trig Function is Hyperbolic
+                    set_type = "Hyperbolics"
+
+                lbl3 = Label(self.master, text="Pick Trigonometric Function: ", font=(FONT_FAMILY, 15))  # Creating Label
+                lbl3.place(x=60, y=260)  # Defining Location for Label
+                cb_set = StringVar()  # Declaring cb_set as String
+                data2 = ("Sine", "Cosine", "Tangent", "Cosecant", "Secant", "Cotangent")  # Defining Data Set
+                cb_set = ttk.Combobox(self.master, values=data2, state="readonly", textvariable=cb_set)  # Creating Drop-Down Menu
+                cb_set.place(x=60, y=290)  # Defining Location for
+
+                def trig_picked(event):  # Creating Function for When Trig is Picked
+
+                    if cb_set.get() == "Sine":  # Setting Condition if 'Sine' is Chosen
+
+                        def submit():  # Creating Function to Graph the Function After Constants Have Been Inputted
+                            a = float(first_var_entry.get())  # Retrieving Input From 'first_var_entry'
+                            b = float(second_var_entry.get())  # Retrieving Input From 'second_var_entry'
+                            c = float(third_var_entry.get())  # Retrieving Input From 'third_var_entry'
+                            d = float(fourth_var_entry.get())  # Retrieving Input From 'fourth_var_entry'
+
+                            x = np.arange(-10, 10, 0.1)  # 100 Spaced Numbers, x-axis Ranging From -2pi to 2pi
+
+                            # Defining Global Integral Function
+                            global integral_function
+
+                            if set_type == "Ordinary":  # Defining Condition When Set_Type is Identified
+                                y = (a * np.sin(b * (x + c))) + d  # Creating Function
+                                integral_function = f"({a} * np.sin({b} * (x + {c}))) + {d}"  # Turning Function into String
+                            else:
+                                y = (a * np.sinh(b * (x + c))) + d  # Creating Function
+                                integral_function = f"({a} * np.sinh({b} * (x + {c}))) + {d}"  # Turning Function into String
+
+                            fig = plt.figure()  # Creating Figure
+                            plot = fig.add_subplot(1, 1, 1)  # Defining Plot
+                            plot.plot(x, y, "#2C5F2DFF")  # Plotting Function
+
+                            plot.grid()  # Plotting Grid
+
+                            canvas = FigureCanvasTkAgg(fig, self.master)  # Creating Canvas & Displaying Function on Window
+                            canvas.get_tk_widget().place(x=600, y=100)  # Setting Position for Canvas
+
+                        def save(a, b, c, d):  # Creating New Function to Save Functions
+                            name = simpledialog.askstring(title="Naming Function", prompt="What would you like to call this function?:")  # Making Pop-Up Box for Naming Function
+
+                            textfile = open(SAVED_FUNCTIONS_PATH, "a", encoding="UTF8", newline="")  # Opening CSV File to Append New Function
+                            writer = csv.writer(textfile)  # Allowing Writing Compatibilities
+                            if set_type == "Ordinary":
+                                data = [name, "trigonometric", "NA", "ordinary", "sine", str(a), str(b), str(c), str(d), "NA", "NA", "NA"]  # Data to be Written in File
+                            else:
+                                data = [name, "trigonometric", "NA", "hyperbolic", "sine", str(a), str(b), str(c), str(d), "NA", "NA", "NA"]  # Data to be Written in File
+
+                            writer.writerow(data)  # Adding New Function
+
+                        if set_type == "Ordinary":  # Defining Condition When Set_Type is Identified
+                            function_label = Label(self.master, text="f(x) = a * sin(b(x+c)) + d", font=(FONT_FAMILY, 15))  # Creating Label
+                        else:
+                            function_label = Label(self.master, text="f(x) = a * sinh(b(x+c)) + d", font=(FONT_FAMILY, 15))  # Creating Label
+
+                        function_label.place(x=60, y=320)
+                        lbl_a = Label(self.master, text="a", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_a.place(x=75, y=350)  # Defining Location for Label
+                        lbl_b = Label(self.master, text="b", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_b.place(x=125, y=350)  # Defining Location for Label
+                        lbl_c = Label(self.master, text="c", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_c.place(x=180, y=350)  # Defining Location for Label
+                        lbl_d = Label(self.master, text="d", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_d.place(x=235, y=350)  # Defining Location for Label
+
+                        first_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        first_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=first_var_entry)  # Defining New Entry Box for Constant 'a'
+                        first_var_entry.place(x=60, y=370)  # Defining Location for Entry Box
+
+                        second_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        second_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=second_var_entry)  # Defining New Entry Box for Constant 'b'
+                        second_var_entry.place(x=115, y=370)  # Defining Location for Entry Box
+
+                        third_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        third_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=third_var_entry)  # Defining New Entry Box for Constant 'c'
+                        third_var_entry.place(x=170, y=370)  # Defining Location for Entry Box
+
+                        fourth_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        fourth_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=fourth_var_entry)  # Defining New Entry Box for Constant 'd'
+                        fourth_var_entry.place(x=225, y=370)  # Defining Location for Entry Box
+
+                        confirm_btn = Button(self.master, text="Confirm", command=submit, font=(FONT_FAMILY, 15))  # Creating Confirm Button
+                        confirm_btn.place(x=270, y=370)  # Defining Location for Confirm Button
+
+                        btn = Button(
+                            self.master,
+                            text="Save",
+                            bd="5",
+                            command=lambda: save(float(first_var_entry.get()), float(second_var_entry.get()), float(third_var_entry.get()), float(fourth_var_entry.get())),
+                        )  # Creating Button to Save Function
+                        btn.place(x=100, y=20)  # Defining Location for Button
+
+                    elif cb_set.get() == "Cosine":  # Setting Condition if 'Cosine' is Chosen
+
+                        def submit():  # Creating Function to Graph the Function After Constants Have Been Inputted
+                            a = float(first_var_entry.get())  # Retrieving Input From 'first_var_entry'
+                            b = float(second_var_entry.get())  # Retrieving Input From 'second_var_entry'
+                            c = float(third_var_entry.get())  # Retrieving Input From 'third_var_entry'
+                            d = float(fourth_var_entry.get())  # Retrieving Input From 'fourth_var_entry'
+
+                            x = np.arange(-10, 10, 0.1)  # Spacing numbers along the x-axis Ranging From -10 to 10
+
+                            # Defining Global Integral Function
+                            global integral_function
+
+                            if set_type == "Ordinary":  # Defining Condition When Set_Type is Identified
+                                y = (a * np.cos(b * (x + c))) + d  # Creating Function
+                                integral_function = f"({a} * np.cos({b} * (x + {c}))) + {d}"  # Turning Function into String
+                            else:
+                                y = (a * np.cosh(b * (x + c))) + d  # Creating Function
+                                integral_function = f"({a} * np.cosh({b} * (x + {c}))) + {d}"  # Turning Function into String
+
+                            fig = plt.figure()  # Creating Figure
+                            plot = fig.add_subplot(1, 1, 1)  # Defining Plot
+                            plot.plot(x, y, "#2C5F2DFF")  # Plotting Function
+
+                            plot.grid()  # Plotting Grid
+
+                            canvas = FigureCanvasTkAgg(fig, self.master)  # Creating Canvas & Displaying Function on Window
+                            canvas.get_tk_widget().place(x=600, y=100)  # Setting Position for Canvas
+
+                        def save(a, b, c, d):  # Creating New Function to Save Functions
+                            name = simpledialog.askstring(title="Naming Function", prompt="What would you like to call this function?:")  # Making Pop-Up Box for Naming Function
+
+                            textfile = open(SAVED_FUNCTIONS_PATH, "a", encoding="UTF8", newline="")  # Opening CSV File to Append New Function
+                            writer = csv.writer(textfile)  # Allowing Writing Compatibilities
+                            if set_type == "Ordinary":
+                                data = [name, "trigonometric", "NA", "ordinary", "cosine", str(a), str(b), str(c), str(d), "NA", "NA", "NA"]  # Data to be Written in File
+                            else:
+                                data = [name, "trigonometric", "NA", "hyperbolic", "cosine", str(a), str(b), str(c), str(d), "NA", "NA", "NA"]  # Data to be Written in File
+
+                            writer.writerow(data)  # Adding New Function
+
+                        if set_type == "Ordinary":  # Defining Condition When Set_Type is Identified
+                            function_label = Label(self.master, text="f(x) = a * cos(b(x+c)) + d", font=(FONT_FAMILY, 15))  # Creating Label
+                        else:
+                            function_label = Label(self.master, text="f(x) = a * cosh(b(x+c)) + d", font=(FONT_FAMILY, 15))  # Creating Label
+
+                        function_label.place(x=60, y=320)
+                        lbl_a = Label(self.master, text="a", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_a.place(x=75, y=350)  # Defining Location for Label
+                        lbl_b = Label(self.master, text="b", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_b.place(x=125, y=350)  # Defining Location for Label
+                        lbl_c = Label(self.master, text="c", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_c.place(x=180, y=350)  # Defining Location for Label
+                        lbl_d = Label(self.master, text="d", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_d.place(x=235, y=350)  # Defining Location for Label
+
+                        first_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        first_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=first_var_entry)  # Defining New Entry Box for Constant 'a'
+                        first_var_entry.place(x=60, y=370)  # Defining Location for Entry Box
+
+                        second_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        second_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=second_var_entry)  # Defining New Entry Box for Constant 'b'
+                        second_var_entry.place(x=115, y=370)  # Defining Location for Entry Box
+
+                        third_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        third_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=third_var_entry)  # Defining New Entry Box for Constant 'c'
+                        third_var_entry.place(x=170, y=370)  # Defining Location for Entry Box
+
+                        fourth_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        fourth_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=fourth_var_entry)  # Defining New Entry Box for Constant 'd'
+                        fourth_var_entry.place(x=225, y=370)  # Defining Location for Entry Box
+
+                        confirm_btn = Button(self.master, text="Confirm", command=submit, font=(FONT_FAMILY, 15))  # Creating Confirm Button
+                        confirm_btn.place(x=270, y=370)  # Defining Location for Confirm Button
+
+                        btn = Button(
+                            self.master,
+                            text="Save",
+                            bd="5",
+                            command=lambda: save(float(first_var_entry.get()), float(second_var_entry.get()), float(third_var_entry.get()), float(fourth_var_entry.get())),
+                        )  # Creating Button to Save Function
+                        btn.place(x=100, y=20)  # Defining Location for Button
+
+                    elif cb_set.get() == "Tangent":  # Setting Condition if 'Tangent' is Chosen
+
+                        def submit():  # Creating Function to Graph the Function After Constants Have Been Inputted
+                            a = float(first_var_entry.get())  # Retrieving Input From 'first_var_entry'
+                            b = float(second_var_entry.get())  # Retrieving Input From 'second_var_entry'
+                            c = float(third_var_entry.get())  # Retrieving Input From 'third_var_entry'
+                            d = float(fourth_var_entry.get())  # Retrieving Input From 'fourth_var_entry'
+
+                            x = np.arange(-10, 10, 0.1)  # Spacing numbers along the x-axis Ranging From -10 to 10
+
+                            # Defining Global Integral Function
+                            global integral_function
+
+                            if set_type == "Ordinary":  # Defining Condition When Set_Type is Identified
+                                y = (a * np.tan(b * (x + c))) + d  # Creating Function
+                                integral_function = f"({a} * np.tan({b} * (x + {c}))) + {d}"  # Turning Function into String
+                            else:
+                                y = (a * np.tanh(b * (x + c))) + d  # Creating Function
+                                integral_function = f"({a} * np.tanh({b} * (x + {c}))) + {d}"  # Turning Function into String
+
+                            fig = plt.figure()  # Creating Figure
+                            plot = fig.add_subplot(1, 1, 1)  # Defining Plot
+                            plot.plot(x, y, "#2C5F2DFF")  # Plotting Function
+
+                            plot.grid()  # Plotting Grid
+
+                            canvas = FigureCanvasTkAgg(fig, self.master)  # Creating Canvas & Displaying Function on Window
+                            canvas.get_tk_widget().place(x=600, y=100)  # Setting Position for Canvas
+
+                        def save(a, b, c, d):  # Creating New Function to Save Functions
+                            name = simpledialog.askstring(title="Naming Function", prompt="What would you like to call this function?:")  # Making Pop-Up Box for Naming Function
+
+                            textfile = open(SAVED_FUNCTIONS_PATH, "a", encoding="UTF8", newline="")  # Opening CSV File to Append New Function
+                            writer = csv.writer(textfile)  # Allowing Writing Compatibilities
+                            if set_type == "Ordinary":
+                                data = [name, "trigonometric", "NA", "ordinary", "tangent", str(a), str(b), str(c), str(d), "NA", "NA", "NA"]  # Data to be Written in File
+                            else:
+                                data = [name, "trigonometric", "NA", "hyperbolic", "tangent", str(a), str(b), str(c), str(d), "NA", "NA", "NA"]  # Data to be Written in File
+
+                            writer.writerow(data)  # Adding New Function
+
+                        if set_type == "Ordinary":  # Defining Condition When Set_Type is Identified
+                            function_label = Label(self.master, text="f(x) = a * tan(b(x+c)) + d", font=(FONT_FAMILY, 15))  # Creating Label
+                        else:
+                            function_label = Label(self.master, text="f(x) = a * tanh(b(x+c)) + d", font=(FONT_FAMILY, 15))  # Creating Label
+
+                        function_label.place(x=60, y=320)
+                        lbl_a = Label(self.master, text="a", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_a.place(x=75, y=350)  # Defining Location for Label
+                        lbl_b = Label(self.master, text="b", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_b.place(x=125, y=350)  # Defining Location for Label
+                        lbl_c = Label(self.master, text="c", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_c.place(x=180, y=350)  # Defining Location for Label
+                        lbl_d = Label(self.master, text="d", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_d.place(x=235, y=350)  # Defining Location for Label
+
+                        first_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        first_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=first_var_entry)  # Defining New Entry Box for Constant 'a'
+                        first_var_entry.place(x=60, y=370)  # Defining Location for Entry Box
+
+                        second_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        second_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=second_var_entry)  # Defining New Entry Box for Constant 'b'
+                        second_var_entry.place(x=115, y=370)  # Defining Location for Entry Box
+
+                        third_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        third_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=third_var_entry)  # Defining New Entry Box for Constant 'c'
+                        third_var_entry.place(x=170, y=370)  # Defining Location for Entry Box
+
+                        fourth_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        fourth_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=fourth_var_entry)  # Defining New Entry Box for Constant 'd'
+                        fourth_var_entry.place(x=225, y=370)  # Defining Location for Entry Box
+
+                        confirm_btn = Button(self.master, text="Confirm", command=submit, font=(FONT_FAMILY, 15))  # Creating Confirm Button
+                        confirm_btn.place(x=270, y=370)  # Defining Location for Confirm Button
+
+                        btn = Button(
+                            self.master,
+                            text="Save",
+                            bd="5",
+                            command=lambda: save(float(first_var_entry.get()), float(second_var_entry.get()), float(third_var_entry.get()), float(fourth_var_entry.get())),
+                        )  # Creating Button to Save Function
+                        btn.place(x=100, y=20)  # Defining Location for Button
+
+                    elif cb_set.get() == "Cosecant":  # Setting Condition if 'Cosecant' is Chosen
+
+                        def submit():  # Creating Function to Graph the Function After Constants Have Been Inputted
+                            a = float(first_var_entry.get())  # Retrieving Input From 'first_var_entry'
+                            b = float(second_var_entry.get())  # Retrieving Input From 'second_var_entry'
+                            c = float(third_var_entry.get())  # Retrieving Input From 'third_var_entry'
+                            d = float(fourth_var_entry.get())  # Retrieving Input From 'fourth_var_entry'
+
+                            x = np.arange(-10, 10, 0.1)  # Spacing numbers along the x-axis Ranging From -10 to 10
+
+                            # Defining Global Integral Function
+                            global integral_function
+
+                            if set_type == "Ordinary":  # Defining Condition When Set_Type is Identified
+                                y = (a * np.arcsin(b * (x + c))) + d  # Creating Function
+                                integral_function = f"({a} * np.arcsin({b} * (x + {c}))) + {d}"  # Turning Function into String
+                            else:
+                                y = (a * np.arcsinh(b * (x + c))) + d  # Creating Function
+                                integral_function = f"({a} * np.arcsinh({b} * (x + {c}))) + {d}"  # Turning Function into String
+
+                            fig = plt.figure()  # Creating Figure
+                            plot = fig.add_subplot(1, 1, 1)  # Defining Plot
+                            plot.plot(x, y, "#2C5F2DFF")  # Plotting Function
+
+                            plot.grid()  # Plotting Grid
+
+                            canvas = FigureCanvasTkAgg(fig, self.master)  # Creating Canvas & Displaying Function on Window
+                            canvas.get_tk_widget().place(x=600, y=100)  # Setting Position for Canvas
+
+                        def save(a, b, c, d):  # Creating New Function to Save Functions
+                            name = simpledialog.askstring(title="Naming Function", prompt="What would you like to call this function?:")  # Making Pop-Up Box for Naming Function
+
+                            textfile = open(SAVED_FUNCTIONS_PATH, "a", encoding="UTF8", newline="")  # Opening CSV File to Append New Function
+                            writer = csv.writer(textfile)  # Allowing Writing Compatibilities
+                            if set_type == "Ordinary":
+                                data = [name, "trigonometric", "NA", "ordinary", "cosecant", str(a), str(b), str(c), str(d), "NA", "NA", "NA"]  # Data to be Written in File
+                            else:
+                                data = [name, "trigonometric", "NA", "hyperbolic", "cosecant", str(a), str(b), str(c), str(d), "NA", "NA", "NA"]  # Data to be Written in File
+
+                            writer.writerow(data)  # Adding New Function
+
+                        if set_type == "Ordinary":  # Defining Condition When Set_Type is Identified
+                            function_label = Label(self.master, text="f(x) = a * csc(b(x+c)) + d", font=(FONT_FAMILY, 15))  # Creating Label
+                        else:
+                            function_label = Label(self.master, text="f(x) = a * csch(b(x+c)) + d", font=(FONT_FAMILY, 15))  # Creating Label
+
+                        function_label.place(x=60, y=320)
+                        lbl_a = Label(self.master, text="a", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_a.place(x=75, y=350)  # Defining Location for Label
+                        lbl_b = Label(self.master, text="b", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_b.place(x=125, y=350)  # Defining Location for Label
+                        lbl_c = Label(self.master, text="c", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_c.place(x=180, y=350)  # Defining Location for Label
+                        lbl_d = Label(self.master, text="d", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_d.place(x=235, y=350)  # Defining Location for Label
+
+                        first_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        first_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=first_var_entry)  # Defining New Entry Box for Constant 'a'
+                        first_var_entry.place(x=60, y=370)  # Defining Location for Entry Box
+
+                        second_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        second_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=second_var_entry)  # Defining New Entry Box for Constant 'b'
+                        second_var_entry.place(x=115, y=370)  # Defining Location for Entry Box
+
+                        third_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        third_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=third_var_entry)  # Defining New Entry Box for Constant 'c'
+                        third_var_entry.place(x=170, y=370)  # Defining Location for Entry Box
+
+                        fourth_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        fourth_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=fourth_var_entry)  # Defining New Entry Box for Constant 'd'
+                        fourth_var_entry.place(x=225, y=370)  # Defining Location for Entry Box
+
+                        confirm_btn = Button(self.master, text="Confirm", command=submit, font=(FONT_FAMILY, 15))  # Creating Confirm Button
+                        confirm_btn.place(x=270, y=370)  # Defining Location for Confirm Button
+
+                        btn = Button(
+                            self.master,
+                            text="Save",
+                            bd="5",
+                            command=lambda: save(float(first_var_entry.get()), float(second_var_entry.get()), float(third_var_entry.get()), float(fourth_var_entry.get())),
+                        )  # Creating Button to Save Function
+                        btn.place(x=100, y=20)  # Defining Location for Button
+
+                    elif cb_set.get() == "Secant":  # Setting Condition if 'Secant' is Chosen
+
+                        def submit():  # Creating Function to Graph the Function After Constants Have Been Inputted
+                            a = float(first_var_entry.get())  # Retrieving Input From 'first_var_entry'
+                            b = float(second_var_entry.get())  # Retrieving Input From 'second_var_entry'
+                            c = float(third_var_entry.get())  # Retrieving Input From 'third_var_entry'
+                            d = float(fourth_var_entry.get())  # Retrieving Input From 'fourth_var_entry'
+
+                            x = np.arange(-10, 10, 0.1)  # Spacing numbers along the x-axis Ranging From -10 to 10
+
+                            # Defining Global Integral Function
+                            global integral_function
+
+                            if set_type == "Ordinary":  # Defining Condition When Set_Type is Identified
+                                y = (a * np.arccos(b * (x + c))) + d  # Creating Function
+                                integral_function = f"({a} * np.arccos({b} * (x + {c}))) + {d}"  # Turning Function into String
+                            else:
+                                y = (a * np.arccosh(b * (x + c))) + d  # Creating Function
+                                integral_function = f"({a} * np.arccosh({b} * (x + {c}))) + {d}"  # Turning Function into String
+
+                            fig = plt.figure()  # Creating Figure
+                            plot = fig.add_subplot(1, 1, 1)  # Defining Plot
+                            plot.plot(x, y, "#2C5F2DFF")  # Plotting Function
+
+                            plot.grid()  # Plotting Grid
+
+                            canvas = FigureCanvasTkAgg(fig, self.master)  # Creating Canvas & Displaying Function on Window
+                            canvas.get_tk_widget().place(x=600, y=100)  # Setting Position for Canvas
+
+                        def save(a, b, c, d):  # Creating New Function to Save Functions
+                            name = simpledialog.askstring(title="Naming Function", prompt="What would you like to call this function?:")  # Making Pop-Up Box for Naming Function
+
+                            textfile = open(SAVED_FUNCTIONS_PATH, "a", encoding="UTF8", newline="")  # Opening CSV File to Append New Function
+                            writer = csv.writer(textfile)  # Allowing Writing Compatibilities
+                            if set_type == "Ordinary":
+                                data = [name, "trigonometric", "NA", "ordinary", "secant", str(a), str(b), str(c), str(d), "NA", "NA", "NA"]  # Data to be Written in File
+                            else:
+                                data = [name, "trigonometric", "NA", "hyperbolic", "secant", str(a), str(b), str(c), str(d), "NA", "NA", "NA"]  # Data to be Written in File
+
+                            writer.writerow(data)  # Adding New Function
+
+                        if set_type == "Ordinary":  # Defining Condition When Set_Type is Identified
+                            function_label = Label(self.master, text="f(x) = a * sec(b(x+c)) + d", font=(FONT_FAMILY, 15))  # Creating Label
+                        else:
+                            function_label = Label(self.master, text="f(x) = a * sech(b(x+c)) + d", font=(FONT_FAMILY, 15))  # Creating Label
+
+                        function_label.place(x=60, y=320)
+                        lbl_a = Label(self.master, text="a", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_a.place(x=75, y=350)  # Defining Location for Label
+                        lbl_b = Label(self.master, text="b", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_b.place(x=125, y=350)  # Defining Location for Label
+                        lbl_c = Label(self.master, text="c", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_c.place(x=180, y=350)  # Defining Location for Label
+                        lbl_d = Label(self.master, text="d", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_d.place(x=235, y=350)  # Defining Location for Label
+
+                        first_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        first_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=first_var_entry)  # Defining New Entry Box for Constant 'a'
+                        first_var_entry.place(x=60, y=370)  # Defining Location for Entry Box
+
+                        second_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        second_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=second_var_entry)  # Defining New Entry Box for Constant 'b'
+                        second_var_entry.place(x=115, y=370)  # Defining Location for Entry Box
+
+                        third_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        third_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=third_var_entry)  # Defining New Entry Box for Constant 'c'
+                        third_var_entry.place(x=170, y=370)  # Defining Location for Entry Box
+
+                        fourth_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        fourth_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=fourth_var_entry)  # Defining New Entry Box for Constant 'd'
+                        fourth_var_entry.place(x=225, y=370)  # Defining Location for Entry Box
+
+                        confirm_btn = Button(self.master, text="Confirm", command=submit, font=(FONT_FAMILY, 15))  # Creating Confirm Button
+                        confirm_btn.place(x=270, y=370)  # Defining Location for Confirm Button
+
+                        btn = Button(
+                            self.master,
+                            text="Save",
+                            bd="5",
+                            command=lambda: save(float(first_var_entry.get()), float(second_var_entry.get()), float(third_var_entry.get()), float(fourth_var_entry.get())),
+                        )  # Creating Button to Save Function
+                        btn.place(x=100, y=20)  # Defining Location for Button
+
+                    elif cb_set.get() == "Cotangent":  # Setting Condition if 'Cotangent' is Chosen
+
+                        def submit():  # Creating Function to Graph the Function After Constants Have Been Inputted
+                            a = float(first_var_entry.get())  # Retrieving Input From 'first_var_entry'
+                            b = float(second_var_entry.get())  # Retrieving Input From 'second_var_entry'
+                            c = float(third_var_entry.get())  # Retrieving Input From 'third_var_entry'
+                            d = float(fourth_var_entry.get())  # Retrieving Input From 'fourth_var_entry'
+
+                            x = np.arange(-10, 10, 0.1)  # Spacing numbers along the x-axis Ranging From -10 to 10
+
+                            # Defining Global Integral Function
+                            global integral_function
+
+                            if set_type == "Ordinary":  # Defining Condition When Set_Type is Identified
+                                y = (a * np.arctan(b * (x + c))) + d  # Creating Function
+                                integral_function = f"({a} * np.arctan({b} * (x + {c}))) + {d}"  # Turning Function into String
+                            else:
+                                y = (a * np.arctanh(b * (x + c))) + d  # Creating Function
+                                integral_function = f"({a} * np.arctanh({b} * (x + {c}))) + {d}"  # Turning Function into String
+
+                            fig = plt.figure()  # Creating Figure
+                            plot = fig.add_subplot(1, 1, 1)  # Defining Plot
+                            plot.plot(x, y, "#2C5F2DFF")  # Plotting Function
+
+                            plot.grid()  # Plotting Grid
+
+                            canvas = FigureCanvasTkAgg(fig, self.master)  # Creating Canvas & Displaying Function on Window
+                            canvas.get_tk_widget().place(x=600, y=100)  # Setting Position for Canvas
+
+                        def save(a, b, c, d):  # Creating New Function to Save Functions
+                            name = simpledialog.askstring(title="Naming Function", prompt="What would you like to call this function?:")  # Making Pop-Up Box for Naming Function
+
+                            textfile = open(SAVED_FUNCTIONS_PATH, "a", encoding="UTF8", newline="")  # Opening CSV File to Append New Function
+                            writer = csv.writer(textfile)  # Allowing Writing Compatibilities
+                            if set_type == "Ordinary":
+                                data = [name, "trigonometric", "NA", "ordinary", "cotangent", str(a), str(b), str(c), str(d), "NA", "NA", "NA"]  # Data to be Written in File
+                            else:
+                                data = [name, "trigonometric", "NA", "hyperbolic", "cotanget", str(a), str(b), str(c), str(d), "NA", "NA", "NA"]  # Data to be Written in File
+
+                            writer.writerow(data)  # Adding New Function
+
+                        if set_type == "Ordinary":  # Defining Condition When Set_Type is Identified
+                            function_label = Label(self.master, text="f(x) = a * cot(b(x+c)) + d", font=(FONT_FAMILY, 15))  # Creating Label
+                        else:
+                            function_label = Label(self.master, text="f(x) = a * coth(b(x+c)) + d", font=(FONT_FAMILY, 15))  # Creating Label
+
+                        function_label.place(x=60, y=320)
+                        lbl_a = Label(self.master, text="a", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_a.place(x=75, y=350)  # Defining Location for Label
+                        lbl_b = Label(self.master, text="b", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_b.place(x=125, y=350)  # Defining Location for Label
+                        lbl_c = Label(self.master, text="c", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_c.place(x=180, y=350)  # Defining Location for Label
+                        lbl_d = Label(self.master, text="d", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_d.place(x=235, y=350)  # Defining Location for Label
+
+                        first_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        first_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=first_var_entry)  # Defining New Entry Box for Constant 'a'
+                        first_var_entry.place(x=60, y=370)  # Defining Location for Entry Box
+
+                        second_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        second_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=second_var_entry)  # Defining New Entry Box for Constant 'b'
+                        second_var_entry.place(x=115, y=370)  # Defining Location for Entry Box
+
+                        third_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        third_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=third_var_entry)  # Defining New Entry Box for Constant 'c'
+                        third_var_entry.place(x=170, y=370)  # Defining Location for Entry Box
+
+                        fourth_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        fourth_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=fourth_var_entry)  # Defining New Entry Box for Constant 'd'
+                        fourth_var_entry.place(x=225, y=370)  # Defining Location for Entry Box
+
+                        confirm_btn = Button(self.master, text="Confirm", command=submit, font=(FONT_FAMILY, 15))  # Creating Confirm Button
+                        confirm_btn.place(x=270, y=370)  # Defining Location for Confirm Button
+
+                        btn = Button(
+                            self.master,
+                            text="Save",
+                            bd="5",
+                            command=lambda: save(float(first_var_entry.get()), float(second_var_entry.get()), float(third_var_entry.get()), float(fourth_var_entry.get())),
+                        )  # Creating Button to Save Function
+                        btn.place(x=100, y=20)  # Defining Location for Button
+
+                cb_set.bind("<<ComboboxSelected>>", trig_picked)  # Binding Change to Set ComboBox to Run 'trig_picked'
+
+            cb_trig.bind("<<ComboboxSelected>>", set_picked)  # Binding Change to Trig ComboBox to Run 'set_picked'
+
+        elif self.cb_Initial.get() == "Exponential":  # Setting a Condition if 'Exponential' is Selected
+
+            def submit():  # Creating New Function When 'Confirm' Button is Clicked
+                first_var = float(first_var_entry.get())  # Retrieving Input From 'first_var_entry'
+                second_var = float(second_var_entry.get())  # Retrieving Input From 'second_var_entry'
+                third_var = float(third_var_entry.get())  # Retrieving Input From 'third_var_entry'
+
+                x = np.arange(-10, 10, 0.1)  # Spacing Numbers on Axis
+                y = first_var * np.exp(x * second_var) + third_var  # Creating Function Using Retrieved Values
+
+                # Defining Global Integral Function
+                global integral_function
+                integral_function = y
+
+                fig = plt.figure()  # Creating Figure
+
+                plot = fig.add_subplot(1, 1, 1)  # Defining Plot
+                plot.plot(x, y, "#2C5F2DFF")  # Plotting Function
+
+                plot.grid()  # Plotting Grid
+
+                canvas = FigureCanvasTkAgg(fig, self.master)  # Creating Canvas & Displaying Function on Window
+                canvas.get_tk_widget().place(x=600, y=100)  # Setting Position for Canvas
+
+            def save(a, b, c):  # Creating New Function to Save Functions
+                name = simpledialog.askstring(title="Naming Function", prompt="What would you like to call this function?:")  # Making Pop-Up Box for Naming Function
+
+                textfile = open(SAVED_FUNCTIONS_PATH, "a", encoding="UTF8", newline="")  # Opening CSV File to Append New Function
+                writer = csv.writer(textfile)  # Allowing Writing Compatibilities
+                data = [name, "exponential", "NA", "NA", "NA", str(a), str(b), str(c), "NA", "NA", "NA", "NA"]  # Data to be Written in File
+                writer.writerow(data)  # Adding New Function
+
+            lbl2 = Label(self.master, text="f(x) = a * e ^ bx + c", font=(FONT_FAMILY, 15))  # Creating New Label
+            lbl2.place(x=60, y=190)  # Defining Location for Label
+
+            first_var_entry = StringVar()  # Defining Input Field as String (Entry)
+            first_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=first_var_entry)  # Defining New Entry Box for Constant 'a'
+            first_var_entry.place(x=60, y=240)  # Defining Location for Entry Box
+
+            second_var_entry = StringVar()  # Defining Input Field as String (Entry)
+            second_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=second_var_entry)  # Defining New Entry Box for Constant 'b'
+            second_var_entry.place(x=115, y=240)  # Defining Location for Entry Box
+
+            third_var_entry = StringVar()  # Defining Input Field as String (Entry)
+            third_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=third_var_entry)  # Defining New Entry Box for Constant 'c'
+            third_var_entry.place(x=170, y=240)  # Defining Location for Entry Box
+
+            lbl_a = Label(self.master, text="a", font=(FONT_FAMILY, 15))  # Creating New Label
+            lbl_a.place(x=75, y=220)  # Defining Location for Label
+            lbl_b = Label(self.master, text="b", font=(FONT_FAMILY, 15))  # Creating New Label
+            lbl_b.place(x=125, y=220)  # Defining Location for Label
+            lbl_c = Label(self.master, text="c", font=(FONT_FAMILY, 15))  # Creating New Label
+            lbl_c.place(x=180, y=220)  # Defining Location for Label
+
+            confirm_btn = Button(self.master, text="Confirm", command=submit, font=(FONT_FAMILY, 15))  # Creating Confirm Button
+            confirm_btn.place(x=210, y=240)  # Defining Location for Confirm Button
+
+            btn = Button(
+                self.master, text="Save", bd="5", command=lambda: save(float(first_var_entry.get()), float(second_var_entry.get()), float(third_var_entry.get()))
+            )  # Creating Button to Save Function
+            btn.place(x=100, y=20)  # Defining Location for Button
+
+        elif self.cb_Initial.get() == "Logarithmic":  # Setting a Condition if 'Logarithmic' is Selected
+
+            def submit():  # Creating New Function When 'Confirm' Button is Clicked
+                first_var = float(first_var_entry.get())  # Retrieving Input From 'first_var_entry'
+                second_var = float(second_var_entry.get())  # Retrieving Input From 'second_var_entry'
+                third_var = float(third_var_entry.get())  # Retrieving Input From 'third_var_entry'
+
+                x = np.arange(-10, 10, 0.1)  # Spacing Numbers on Axis
+                y = first_var * np.log(second_var * x) + third_var  # Creating Function Using Retrieved Values
+
+                # Defining Global Integral Function
+                global integral_function
+                integral_function = str(first_var) + " * np.log(" + str(second_var) + " * x) + " + str(third_var)  # Turning Function into String
+
+                fig = plt.figure()  # Creating Figure
+
+                plot = fig.add_subplot(1, 1, 1)  # Defining Plot
+                plot.plot(x, y, "#2C5F2DFF")  # Plotting Function
+
+                plot.grid()  # Plotting Grid
+
+                canvas = FigureCanvasTkAgg(fig, self.master)  # Creating Canvas & Displaying Function on Window
+                canvas.get_tk_widget().place(x=600, y=100)  # Setting Position for Canvas
+
+            def save(a, b, c):  # Creating New Function to Save Functions
+                name = simpledialog.askstring(title="Naming Function", prompt="What would you like to call this function?:")  # Making Pop-Up Box for Naming Function
+
+                textfile = open(SAVED_FUNCTIONS_PATH, "a", encoding="UTF8", newline="")  # Opening CSV File to Append New Function
+                writer = csv.writer(textfile)  # Allowing Writing Compatibilities
+                data = [name, "logarithmic", "NA", "NA", "NA", str(a), str(b), str(c), "NA", "NA", "NA", "NA"]  # Data to be Written in File
+                writer.writerow(data)  # Adding New Function
+
+            lbl2 = Label(self.master, text="f(x) = a * log(bx) + c", font=(FONT_FAMILY, 15))  # Creating New Label
+            lbl2.place(x=60, y=190)  # Defining Location for Label
+
+            first_var_entry = StringVar()  # Defining Input Field as String (Entry)
+            first_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=first_var_entry)  # Defining New Entry Box for Constant 'a'
+            first_var_entry.place(x=60, y=240)  # Defining Location for Entry Box
+
+            second_var_entry = StringVar()  # Defining Input Field as String (Entry)
+            second_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=second_var_entry)  # Defining New Entry Box for Constant 'b'
+            second_var_entry.place(x=115, y=240)  # Defining Location for Entry Box
+
+            third_var_entry = StringVar()  # Defining Input Field as String (Entry)
+            third_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=third_var_entry)  # Defining New Entry Box for Constant 'c'
+            third_var_entry.place(x=170, y=240)  # Defining Location for Entry Box
+
+            lbl_a = Label(self.master, text="a", font=(FONT_FAMILY, 15))  # Creating New Label
+            lbl_a.place(x=75, y=220)  # Defining Location for Label
+            lbl_b = Label(self.master, text="b", font=(FONT_FAMILY, 15))  # Creating New Label
+            lbl_b.place(x=125, y=220)  # Defining Location for Label
+            lbl_c = Label(self.master, text="c", font=(FONT_FAMILY, 15))  # Creating New Label
+            lbl_c.place(x=180, y=220)  # Defining Location for Label
+
+            confirm_btn = Button(self.master, text="Confirm", command=submit, font=(FONT_FAMILY, 15))  # Creating Confirm Button
+            confirm_btn.place(x=210, y=240)  # Defining Location for Confirm Button
+
+            btn = Button(
+                self.master, text="Save", bd="5", command=lambda: save(float(first_var_entry.get()), float(second_var_entry.get()), float(third_var_entry.get()))
+            )  # Creating Button to Save Function
+            btn.place(x=100, y=20)  # Defining Location for Button
+
+        elif self.cb_Initial.get() == "Linear":  # Setting a Condition if 'Linear' is Selected
+
+            def submit():  # Creating New Function When 'Confirm' Button is Clicked
+                first_var = float(first_var_entry.get())  # Retrieving Input From 'first_var_entry'
+                second_var = float(second_var_entry.get())  # Retrieving Input From 'second_var_entry'
+
+                x = np.arange(-10, 10, 0.1)  # Spacing Numbers on Axis
+                y = first_var * x + second_var  # Creating Function Using Retrieved Values
+
+                # Defining Global Integral Function
+                global integral_function
+                integral_function = str(first_var) + " * x + " + str(second_var)
+
+                fig = plt.figure()  # Creating Figure
+
+                plot = fig.add_subplot(1, 1, 1)  # Defining Plot
+                plot.plot(x, y, "#2C5F2DFF")  # Plotting Function
+
+                plot.grid()  # Plotting Grid
+
+                canvas = FigureCanvasTkAgg(fig, self.master)  # Creating Canvas & Displaying Function on Window
+                canvas.get_tk_widget().place(x=600, y=100)  # Setting Position for Canvas
+
+            def save(a, b):  # Creating New Function to Save Functions
+                name = simpledialog.askstring(title="Naming Function", prompt="What would you like to call this function?:")  # Making Pop-Up Box for Naming Function
+
+                textfile = open(SAVED_FUNCTIONS_PATH, "a", encoding="UTF8", newline="")  # Opening CSV File to Append New Function
+                writer = csv.writer(textfile)  # Allowing Writing Compatibilities
+                data = [name, "linear", "NA", "NA", "NA", str(a), str(b), "NA", "NA", "NA", "NA", "NA"]  # Data to be Written in File
+                writer.writerow(data)  # Adding New Function
+
+            lbl2 = Label(self.master, text="f(x) = ax + b", font=(FONT_FAMILY, 15))  # Creating New Label
+            lbl2.place(x=60, y=190)  # Defining Location for Label
+
+            first_var_entry = StringVar()  # Defining Input Field as String (Entry)
+            first_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=first_var_entry)  # Defining New Entry Box for Constant 'a'
+            first_var_entry.place(x=60, y=240)  # Defining Location for Entry Box
+
+            second_var_entry = StringVar()  # Defining Input Field as String (Entry)
+            second_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=second_var_entry)  # Defining New Entry Box for Constant 'b'
+            second_var_entry.place(x=115, y=240)  # Defining Location for Entry Box
+
+            lbl_a = Label(self.master, text="a", font=(FONT_FAMILY, 15))  # Creating New Label
+            lbl_a.place(x=75, y=220)  # Defining Location for Label
+            lbl_b = Label(self.master, text="b", font=(FONT_FAMILY, 15))  # Creating New Label
+            lbl_b.place(x=125, y=220)  # Defining Location for Label
+
+            confirm_btn = Button(self.master, text="Confirm", command=submit, font=(FONT_FAMILY, 15))  # Creating Confirm Button
+            confirm_btn.place(x=180, y=240)  # Defining Location for Confirm Button
+
+            btn = Button(self.master, text="Save", bd="5", command=lambda: save(float(first_var_entry.get()), float(second_var_entry.get())))  # Creating Button to Save Function
+            btn.place(x=100, y=20)  # Defining Location for Button
+
+        elif self.cb_Initial.get() == "Saved Functions":  # Setting a Condition if 'Saved Functions' is Selected
+
+            class saved_function:
+                def __init__(self, name, function, degree, set, type, a, b, c, d, e, f, g):
+                    self.name = name
+                    self.function = function
+                    self.degree = degree
+                    self.set = set
+                    self.type = type
+                    self.a = a
+                    self.b = b
+                    self.c = c
+                    self.d = d
+                    self.e = e
+                    self.f = f
+                    self.g = g
+
+            saved_function_list = []
+            with open(SAVED_FUNCTIONS_PATH, "r") as textfile:
+                reader = csv.reader(textfile)
+                for row in reader:
+                    saved_function_list.append(saved_function(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10], row[11]))
+
+            data_list = []
+            for x in range(len(saved_function_list)):
+                data_list.append(saved_function_list[x].name)
+
+            lbl2 = Label(self.master, text="Pick Saved Function: ", font=(FONT_FAMILY, 15))  # Creating New Label
+            lbl2.place(x=60, y=190)  # Defining Location for Label
+            cb_saved = StringVar()  # Declaring cb_saved as String (Drop-Down Menu)
+            data1 = data_list  # Defining Data Values
+            cb_saved = ttk.Combobox(self.master, values=data1, state="readonly", textvariable=cb_saved)  # Configuring Drop-Down Menu
+            cb_saved.place(x=60, y=220)  # Defining Location of the Drop-Down Menu
+
+            def loaded_function(event):
+
+                index = cb_saved.current()
+                if saved_function_list[index].function == "polynomial":
+                    if saved_function_list[index].degree == "2":
+
+                        def submit():  # Creating New Function When 'Confirm' Button is Clicked
+                            first_var = float(first_var_entry.get())  # Retrieving Input From 'first_var_entry'
+                            second_var = float(second_var_entry.get())  # Retrieving Input From 'second_var_entry'
+                            third_var = float(third_var_entry.get())  # Retrieving Input From 'third_var_entry'
+
+                            x = np.arange(-10, 10, 0.1)  # Spacing Numbers on Axis
+                            y = (first_var * x**2) + (second_var * x) + third_var  # Creating Function Using Retrieved Values
+
+                            # Defining Global Integral Function
+                            global integral_function
+                            integral_function = "(" + str(first_var) + " * x**2) + (" + str(second_var) + " * x) + " + str(third_var)  # Turning Function into String
+
+                            fig = plt.figure()  # Creating Figure
+
+                            plot = fig.add_subplot(1, 1, 1)  # Defining Plot
+                            plot.plot(x, y, "#2C5F2DFF")  # Plotting Function
+
+                            plot.grid()  # Plotting Grid
+
+                            canvas = FigureCanvasTkAgg(fig, self.master)  # Creating Canvas & Displaying Function on Window
+                            canvas.get_tk_widget().place(x=600, y=100)  # Setting Position for Canvas
+
+                        def save(a, b, c):  # Creating New Function to Save Functions
+                            name = simpledialog.askstring(title="Naming Function", prompt="What would you like to call this function?:")  # Making Pop-Up Box for Naming Function
+
+                            textfile = open(SAVED_FUNCTIONS_PATH, "a", encoding="UTF8", newline="")  # Opening CSV File to Append New Function
+                            writer = csv.writer(textfile)  # Allowing Writing Compatibilities
+                            data = [name, "polynomial", "2", "NA", "NA", str(a), str(b), str(c), "NA", "NA", "NA", "NA"]  # Data to be Written in File
+                            writer.writerow(data)  # Adding New Function
+
+                        lbl3 = Label(self.master, text="Enter Constants for 2nd Degree Polynomial: ", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl3.place(x=60, y=260)  # Defining Location for Label
+
+                        first_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        first_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=first_var_entry)  # Defining New Entry Box for Constant 'a'
+                        first_var_entry.place(x=60, y=320)  # Defining Location for Entry Box
+                        first_var_entry.insert(0, saved_function_list[index].a)  # Autofilling Saved Values
+
+                        second_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        second_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=second_var_entry)  # Defining New Entry Box for Constant 'b'
+                        second_var_entry.place(x=115, y=320)  # Defining Location for Entry Box
+                        second_var_entry.insert(0, saved_function_list[index].b)  # Autofilling Saved Values
+
+                        third_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        third_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=third_var_entry)  # Defining New Entry Box for Constant 'c'
+                        third_var_entry.place(x=170, y=320)  # Defining Location for Entry Box
+                        third_var_entry.insert(0, saved_function_list[index].c)  # Autofilling Saved Values
+
+                        lbl_a = Label(self.master, text="a", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_a.place(x=75, y=300)  # Defining Location for Label
+                        lbl_b = Label(self.master, text="b", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_b.place(x=125, y=300)  # Defining Location for Label
+                        lbl_c = Label(self.master, text="c", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_c.place(x=180, y=300)  # Defining Location for Label
+
+                        submit()
+
+                        confirm_btn = Button(self.master, text="Confirm", command=submit, font=(FONT_FAMILY, 15))  # Creating Confirm Button
+                        confirm_btn.place(x=210, y=320)  # Defining Location for Confirm Button
+
+                        btn = Button(
+                            self.master, text="Save", bd="5", command=lambda: save(float(first_var_entry.get()), float(second_var_entry.get()), float(third_var_entry.get()))
+                        )  # Creating Button to Save Function
+                        btn.place(x=100, y=20)  # Defining Location for Button
+
+                    elif saved_function_list[index].degree == "3":
+
+                        def submit():  # Creating New Function When 'Confirm' Button is Clicked
+                            first_var = float(first_var_entry.get())  # Retrieving Input From 'first_var_entry'
+                            second_var = float(second_var_entry.get())  # Retrieving Input From 'second_var_entry'
+                            third_var = float(third_var_entry.get())  # Retrieving Input From 'third_var_entry'
+                            fourth_var = float(fourth_var_entry.get())  # Retrieving Input From 'fourth_var_entry'
+
+                            x = np.arange(-10, 10, 0.1)  # Spacing Numbers on Axis
+                            y = (first_var * x**3) + (second_var * x**2) + (third_var * x) + fourth_var  # Creating Function Using Retrieved Values
+
+                            # Defining Global Integral Function
+                            global integral_function
+                            integral_function = "(" + str(first_var) + " * x**3) + (" + str(second_var) + " * x**2) + (" + str(third_var) + " * x) + " + str(fourth_var)  # Turning Function into String
+                            fig = plt.figure()  # Creating Figure
+
+                            plot = fig.add_subplot(1, 1, 1)  # Defining Plot
+                            plot.plot(x, y, "#2C5F2DFF")  # Plotting Function
+
+                            plot.grid()  # Plotting Grid
+
+                            canvas = FigureCanvasTkAgg(fig, self.master)  # Creating Canvas & Displaying Function on Window
+                            canvas.get_tk_widget().place(x=600, y=100)  # Setting Position for Canvas
+
+                        def save(a, b, c, d):  # Creating New Function to Save Functions
+                            name = simpledialog.askstring(title="Naming Function", prompt="What would you like to call this function?:")  # Making Pop-Up Box for Naming Function
+
+                            textfile = open(SAVED_FUNCTIONS_PATH, "a", encoding="UTF8", newline="")  # Opening CSV File to Append New Function
+                            writer = csv.writer(textfile)  # Allowing Writing Compatibilities
+                            data = [name, "polynomial", "2", "NA", "NA", str(a), str(b), str(c), str(d), "NA", "NA", "NA"]  # Data to be Written in File
+                            writer.writerow(data)  # Adding New Function
+
+                        lbl3 = Label(self.master, text="Enter Constants for 2nd Degree Polynomial: ", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl3.place(x=60, y=260)  # Defining Location for Label
+
+                        first_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        first_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=first_var_entry)  # Defining New Entry Box for Constant 'a'
+                        first_var_entry.place(x=60, y=320)  # Defining Location for Entry Box
+                        first_var_entry.insert(0, saved_function_list[index].a)  # Autofilling Saved Values
+
+                        second_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        second_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=second_var_entry)  # Defining New Entry Box for Constant 'b'
+                        second_var_entry.place(x=115, y=320)  # Defining Location for Entry Box
+                        second_var_entry.insert(0, saved_function_list[index].b)  # Autofilling Saved Values
+
+                        third_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        third_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=third_var_entry)  # Defining New Entry Box for Constant 'c'
+                        third_var_entry.place(x=170, y=320)  # Defining Location for Entry Box
+                        third_var_entry.insert(0, saved_function_list[index].c)  # Autofilling Saved Values
+
+                        fourth_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        fourth_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=fourth_var_entry)  # Defining New Entry Box for Constant 'd'
+                        fourth_var_entry.place(x=225, y=320)  # Defining Location for Entry Box
+                        fourth_var_entry.insert(0, saved_function_list[index].d)  # Autofilling Saved Values
+
+                        lbl_a = Label(self.master, text="a", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_a.place(x=75, y=300)  # Defining Location for Label
+                        lbl_b = Label(self.master, text="b", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_b.place(x=125, y=300)  # Defining Location for Label
+                        lbl_c = Label(self.master, text="c", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_c.place(x=180, y=300)  # Defining Location for Label
+                        lbl_d = Label(self.master, text="d", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_d.place(x=235, y=300)  # Defining Location for Label
+
+                        submit()
+
+                        confirm_btn = Button(self.master, text="Confirm", command=submit, font=(FONT_FAMILY, 15))  # Creating Confirm Button
+                        confirm_btn.place(x=265, y=320)  # Defining Location for Confirm Button
+
+                        btn = Button(
+                            self.master,
+                            text="Save",
+                            bd="5",
+                            command=lambda: save(float(first_var_entry.get()), float(second_var_entry.get()), float(third_var_entry.get()), float(fourth_var_entry.get())),
+                        )  # Creating Button to Save Function
+                        btn.place(x=100, y=20)  # Defining Location for Button
+
+                    elif saved_function_list[index].degree == "4":
+
+                        def submit():  # Creating New Function When 'Confirm' Button is Clicked
+                            first_var = float(first_var_entry.get())  # Retrieving Input From 'first_var_entry'
+                            second_var = float(second_var_entry.get())  # Retrieving Input From 'second_var_entry'
+                            third_var = float(third_var_entry.get())  # Retrieving Input From 'third_var_entry'
+                            fourth_var = float(fourth_var_entry.get())  # Retrieving Input From 'fourth_var_entry'
+                            fifth_var = float(fifth_var_entry.get())  # Retrieving Input From 'fifth_var_entry'
+
+                            x = np.arange(-10, 10, 0.1)  # Spacing Numbers on Axis
+                            y = (first_var * x**4) + (second_var * x**3) + (third_var * x**2) + (fourth_var * x) + fifth_var  # Creating Function Using Retrieved Values
+
+                            # Defining Global Integral Function
+                            global integral_function
+                            integral_function = (
+                                "(" + str(first_var) + " * x**4) + (" + str(second_var) + " * x**3) + (" + str(third_var) + " * x**2) + (" + str(fourth_var) + " * x) + " + str(fifth_var)
+                            )  # Turning Function into String
+
+                            fig = plt.figure()  # Creating Figure
+                            plot = fig.add_subplot(1, 1, 1)  # Defining Plot
+                            plot.plot(x, y, "#2C5F2DFF")  # Plotting Function
+
+                            plot.grid()  # Plotting Grid
+
+                            canvas = FigureCanvasTkAgg(fig, self.master)  # Creating Canvas & Displaying Function on Window
+                            canvas.get_tk_widget().place(x=600, y=100)  # Setting Position for Canvas
+
+                        def save(a, b, c, d, e):  # Creating New Function to Save Functions
+                            name = simpledialog.askstring(title="Naming Function", prompt="What would you like to call this function?:")  # Making Pop-Up Box for Naming Function
+
+                            textfile = open(SAVED_FUNCTIONS_PATH, "a", encoding="UTF8", newline="")  # Opening CSV File to Append New Function
+                            writer = csv.writer(textfile)  # Allowing Writing Compatibilities
+                            data = [name, "polynomial", "2", "NA", "NA", str(a), str(b), str(c), str(d), str(e), "NA", "NA"]  # Data to be Written in File
+                            writer.writerow(data)  # Adding New Function
+
+                        lbl3 = Label(self.master, text="Enter Constants for 2nd Degree Polynomial: ", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl3.place(x=60, y=260)  # Defining Location for Label
+
+                        first_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        first_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=first_var_entry)  # Defining New Entry Box for Constant 'a'
+                        first_var_entry.place(x=60, y=320)  # Defining Location for Entry Box
+                        first_var_entry.insert(0, saved_function_list[index].a)  # Autofilling Saved Values
+
+                        second_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        second_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=second_var_entry)  # Defining New Entry Box for Constant 'b'
+                        second_var_entry.place(x=115, y=320)  # Defining Location for Entry Box
+                        second_var_entry.insert(0, saved_function_list[index].b)  # Autofilling Saved Values
+
+                        third_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        third_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=third_var_entry)  # Defining New Entry Box for Constant 'c'
+                        third_var_entry.place(x=170, y=320)  # Defining Location for Entry Box
+                        third_var_entry.insert(0, saved_function_list[index].c)  # Autofilling Saved Values
+
+                        fourth_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        fourth_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=fourth_var_entry)  # Defining New Entry Box for Constant 'd'
+                        fourth_var_entry.place(x=225, y=320)  # Defining Location for Entry Box
+                        fourth_var_entry.insert(0, saved_function_list[index].d)  # Autofilling Saved Values
+
+                        fifth_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        fifth_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=fifth_var_entry)  # Defining New Entry Box for Constant 'e'
+                        fifth_var_entry.place(x=280, y=320)  # Defining Location for Entry Box
+                        fifth_var_entry.insert(0, saved_function_list[index].e)  # Autofilling Saved Values
+
+                        lbl_a = Label(self.master, text="a", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_a.place(x=75, y=300)  # Defining Location for Label
+                        lbl_b = Label(self.master, text="b", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_b.place(x=125, y=300)  # Defining Location for Label
+                        lbl_c = Label(self.master, text="c", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_c.place(x=180, y=300)  # Defining Location for Label
+                        lbl_d = Label(self.master, text="d", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_d.place(x=235, y=300)  # Defining Location for Label
+                        lbl_e = Label(self.master, text="e", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_e.place(x=290, y=300)  # Defining Location for Label
+
+                        submit()
+
+                        confirm_btn = Button(self.master, text="Confirm", command=submit, font=(FONT_FAMILY, 15))  # Creating Confirm Button
+                        confirm_btn.place(x=345, y=320)  # Defining Location for Confirm Button
+
+                        btn = Button(
+                            self.master,
+                            text="Save",
+                            bd="5",
+                            command=lambda: save(
+                                float(first_var_entry.get()), float(second_var_entry.get()), float(third_var_entry.get()), float(fourth_var_entry.get()), float(fifth_var_entry.get())
+                            ),
+                        )  # Creating Button to Save Function
+                        btn.place(x=100, y=20)  # Defining Location for Button
+
+                    elif saved_function_list[index].degree == "5":
+
+                        def submit():  # Creating New Function When 'Confirm' Button is Clicked
+                            first_var = float(first_var_entry.get())  # Retrieving Input From 'first_var_entry'
+                            second_var = float(second_var_entry.get())  # Retrieving Input From 'second_var_entry'
+                            third_var = float(third_var_entry.get())  # Retrieving Input From 'third_var_entry'
+                            fourth_var = float(fourth_var_entry.get())  # Retrieving Input From 'fourth_var_entry'
+                            fifth_var = float(fifth_var_entry.get())  # Retrieving Input From 'fifth_var_entry'
+                            sixth_var = float(sixth_var_entry.get())  # Retrieving Input From 'sixth_var_entry'
+
+                            x = np.arange(-10, 10, 0.1)  # Spacing Numbers on Axis
+                            y = (first_var * x**5) + (second_var * x**4) + (third_var * x**3) + (fourth_var * x**2) + (fifth_var * x) + sixth_var  # Creating Function Using Retrieved Values
+
+                            # Defining Global Integral Function
+                            global integral_function
+                            integral_function = (
+                                "("
+                                + str(first_var)
+                                + " * x**5) + ("
+                                + str(second_var)
+                                + " * x**4) + ("
+                                + str(third_var)
+                                + " * x**3) + ("
+                                + str(fourth_var)
+                                + " * x**2) + ("
+                                + str(fifth_var)
+                                + " * x) + "
+                                + str(sixth_var)
+                            )  # Turning Function into String
+
+                            fig = plt.figure()  # Creating Figure
+                            plot = fig.add_subplot(1, 1, 1)  # Defining Plot
+                            plot.plot(x, y, "#2C5F2DFF")  # Plotting Function
+
+                            plot.grid()  # Plotting Grid
+
+                            canvas = FigureCanvasTkAgg(fig, self.master)  # Creating Canvas & Displaying Function on Window
+                            canvas.get_tk_widget().place(x=600, y=100)  # Setting Position for Canvas
+
+                        def save(a, b, c, d, e, f):  # Creating New Function to Save Functions
+                            name = simpledialog.askstring(title="Naming Function", prompt="What would you like to call this function?:")  # Making Pop-Up Box for Naming Function
+
+                            textfile = open(SAVED_FUNCTIONS_PATH, "a", encoding="UTF8", newline="")  # Opening CSV File to Append New Function
+                            writer = csv.writer(textfile)  # Allowing Writing Compatibilities
+                            data = [name, "polynomial", "2", "NA", "NA", str(a), str(b), str(c), str(d), str(e), str(f), "NA"]  # Data to be Written in File
+                            writer.writerow(data)  # Adding New Function
+
+                        lbl3 = Label(self.master, text="Enter Constants for 2nd Degree Polynomial: ", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl3.place(x=60, y=260)  # Defining Location for Label
+
+                        first_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        first_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=first_var_entry)  # Defining New Entry Box for Constant 'a'
+                        first_var_entry.place(x=60, y=320)  # Defining Location for Entry Box
+                        first_var_entry.insert(0, saved_function_list[index].a)  # Autofilling Saved Values
+
+                        second_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        second_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=second_var_entry)  # Defining New Entry Box for Constant 'b'
+                        second_var_entry.place(x=115, y=320)  # Defining Location for Entry Box
+                        second_var_entry.insert(0, saved_function_list[index].b)  # Autofilling Saved Values
+
+                        third_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        third_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=third_var_entry)  # Defining New Entry Box for Constant 'c'
+                        third_var_entry.place(x=170, y=320)  # Defining Location for Entry Box
+                        third_var_entry.insert(0, saved_function_list[index].c)  # Autofilling Saved Values
+
+                        fourth_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        fourth_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=fourth_var_entry)  # Defining New Entry Box for Constant 'd'
+                        fourth_var_entry.place(x=225, y=320)  # Defining Location for Entry Box
+                        fourth_var_entry.insert(0, saved_function_list[index].d)  # Autofilling Saved Values
+
+                        fifth_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        fifth_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=fifth_var_entry)  # Defining New Entry Box for Constant 'e'
+                        fifth_var_entry.place(x=280, y=320)  # Defining Location for Entry Box
+                        fifth_var_entry.insert(0, saved_function_list[index].e)  # Autofilling Saved Values
+
+                        sixth_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        sixth_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=sixth_var_entry)  # Defining New Entry Box for Constant 'f'
+                        sixth_var_entry.place(x=335, y=320)  # Defining Location for Entry Box
+                        sixth_var_entry.insert(0, saved_function_list[index].f)  # Autofilling Saved Values
+
+                        lbl_a = Label(self.master, text="a", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_a.place(x=75, y=300)  # Defining Location for Label
+                        lbl_b = Label(self.master, text="b", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_b.place(x=125, y=300)  # Defining Location for Label
+                        lbl_c = Label(self.master, text="c", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_c.place(x=180, y=300)  # Defining Location for Label
+                        lbl_d = Label(self.master, text="d", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_d.place(x=235, y=300)  # Defining Location for Label
+                        lbl_e = Label(self.master, text="e", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_e.place(x=290, y=300)  # Defining Location for Label
+                        lbl_f = Label(self.master, text="f", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_f.place(x=345, y=300)  # Defining Location for Label
+
+                        submit()
+
+                        confirm_btn = Button(self.master, text="Confirm", command=submit, font=(FONT_FAMILY, 15))  # Creating Confirm Button
+                        confirm_btn.place(x=400, y=320)  # Defining Location for Confirm Button
+
+                        btn = Button(
+                            self.master,
+                            text="Save",
+                            bd="5",
+                            command=lambda: save(
+                                float(first_var_entry.get()),
+                                float(second_var_entry.get()),
+                                float(third_var_entry.get()),
+                                float(fourth_var_entry.get()),
+                                float(fifth_var_entry.get()),
+                                float(sixth_var_entry.get()),
+                            ),
+                        )  # Creating Button to Save Function
+                        btn.place(x=100, y=20)  # Defining Location for Button
+
+                    elif saved_function_list[index].degree == "6":
+
+                        def submit():  # Creating New Function When 'Confirm' Button is Clicked
+                            first_var = float(first_var_entry.get())  # Retrieving Input From 'first_var_entry'
+                            second_var = float(second_var_entry.get())  # Retrieving Input From 'second_var_entry'
+                            third_var = float(third_var_entry.get())  # Retrieving Input From 'third_var_entry'
+                            fourth_var = float(fourth_var_entry.get())  # Retrieving Input From 'fourth_var_entry'
+                            fifth_var = float(fifth_var_entry.get())  # Retrieving Input From 'fifth_var_entry'
+                            sixth_var = float(sixth_var_entry.get())  # Retrieving Input From 'sixth_var_entry'
+                            seventh_var = float(seventh_var_entry.get())  # Retrieving Input From 'seventh_var_entry'
+
+                            x = np.arange(-10, 10, 0.1)  # Spacing Numbers on Axis
+                            y = (
+                                (first_var * x**6) + (second_var * x**5) + (third_var * x**4) + (fourth_var * x**3) + (fifth_var * x**2) + (sixth_var * x) + seventh_var
+                            )  # Creating Function Using Retrieved Values
+
+                            # Defining Global Integral Function
+                            global integral_function
+                            integral_function = (
+                                "("
+                                + str(first_var)
+                                + " * x**6) + ("
+                                + str(second_var)
+                                + " * x**5) + ("
+                                + str(third_var)
+                                + " * x**4) + ("
+                                + str(fourth_var)
+                                + " * x**3) + ("
+                                + str(fifth_var)
+                                + " * x**2) + ("
+                                + str(sixth_var)
+                                + " * x) + "
+                                + str(seventh_var)
+                            )  # Turning Function into String
+
+                            fig = plt.figure()  # Creating Figure
+                            plot = fig.add_subplot(1, 1, 1)  # Defining Plot
+                            plot.plot(x, y, "#2C5F2DFF")  # Plotting Function
+
+                            plot.grid()  # Plotting Grid
+
+                            canvas = FigureCanvasTkAgg(fig, self.master)  # Creating Canvas & Displaying Function on Window
+                            canvas.get_tk_widget().place(x=600, y=100)  # Setting Position for Canvas
+
+                        def save(a, b, c, d, e, f, g):  # Creating New Function to Save Functions
+                            name = simpledialog.askstring(title="Naming Function", prompt="What would you like to call this function?:")  # Making Pop-Up Box for Naming Function
+
+                            textfile = open(SAVED_FUNCTIONS_PATH, "a", encoding="UTF8", newline="")  # Opening CSV File to Append New Function
+                            writer = csv.writer(textfile)  # Allowing Writing Compatibilities
+                            data = [name, "polynomial", "2", "NA", "NA", str(a), str(b), str(c), str(d), str(e), str(f), str(g)]  # Data to be Written in File
+                            writer.writerow(data)  # Adding New Function
+
+                        lbl3 = Label(self.master, text="Enter Constants for 2nd Degree Polynomial: ", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl3.place(x=60, y=260)  # Defining Location for Label
+
+                        first_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        first_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=first_var_entry)  # Defining New Entry Box for Constant 'a'
+                        first_var_entry.place(x=60, y=320)  # Defining Location for Entry Box
+                        first_var_entry.insert(0, saved_function_list[index].a)  # Autofilling Saved Values
+
+                        second_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        second_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=second_var_entry)  # Defining New Entry Box for Constant 'b'
+                        second_var_entry.place(x=115, y=320)  # Defining Location for Entry Box
+                        second_var_entry.insert(0, saved_function_list[index].b)  # Autofilling Saved Values
+
+                        third_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        third_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=third_var_entry)  # Defining New Entry Box for Constant 'c'
+                        third_var_entry.place(x=170, y=320)  # Defining Location for Entry Box
+                        third_var_entry.insert(0, saved_function_list[index].c)  # Autofilling Saved Values
+
+                        fourth_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        fourth_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=fourth_var_entry)  # Defining New Entry Box for Constant 'd'
+                        fourth_var_entry.place(x=225, y=320)  # Defining Location for Entry Box
+                        fourth_var_entry.insert(0, saved_function_list[index].d)  # Autofilling Saved Values
+
+                        fifth_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        fifth_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=fifth_var_entry)  # Defining New Entry Box for Constant 'e'
+                        fifth_var_entry.place(x=280, y=320)  # Defining Location for Entry Box
+                        fifth_var_entry.insert(0, saved_function_list[index].e)  # Autofilling Saved Values
+
+                        sixth_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        sixth_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=sixth_var_entry)  # Defining New Entry Box for Constant 'f'
+                        sixth_var_entry.place(x=335, y=320)  # Defining Location for Entry Box
+                        sixth_var_entry.insert(0, saved_function_list[index].f)  # Autofilling Saved Values
+
+                        seventh_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        seventh_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=seventh_var_entry)  # Defining New Entry Box for Constant 'g'
+                        seventh_var_entry.place(x=390, y=320)  # Defining Location for Entry Box
+                        seventh_var_entry.insert(0, saved_function_list[index].g)  # Autofilling Saved Values
+
+                        lbl_a = Label(self.master, text="a", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_a.place(x=75, y=300)  # Defining Location for Label
+                        lbl_b = Label(self.master, text="b", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_b.place(x=125, y=300)  # Defining Location for Label
+                        lbl_c = Label(self.master, text="c", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_c.place(x=180, y=300)  # Defining Location for Label
+                        lbl_d = Label(self.master, text="d", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_d.place(x=235, y=300)  # Defining Location for Label
+                        lbl_e = Label(self.master, text="e", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_e.place(x=290, y=300)  # Defining Location for Label
+                        lbl_f = Label(self.master, text="f", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_f.place(x=345, y=300)  # Defining Location for Label
+                        lbl_g = Label(self.master, text="g", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_g.place(x=400, y=300)  # Defining Location for Label
+
+                        submit()
+
+                        confirm_btn = Button(self.master, text="Confirm", command=submit, font=(FONT_FAMILY, 15))  # Creating Confirm Button
+                        confirm_btn.place(x=455, y=320)  # Defining Location for Confirm Button
+
+                        btn = Button(
+                            self.master,
+                            text="Save",
+                            bd="5",
+                            command=lambda: save(
+                                float(first_var_entry.get()),
+                                float(second_var_entry.get()),
+                                float(third_var_entry.get()),
+                                float(fourth_var_entry.get()),
+                                float(fifth_var_entry.get()),
+                                float(sixth_var_entry.get()),
+                                float(seventh_var_entry.get()),
+                            ),
+                        )  # Creating Button to Save Function
+                        btn.place(x=100, y=20)  # Defining Location for Button
+
+                elif saved_function_list[index].function == "trigonometric":
+
+                    if saved_function_list[index].type == "sine":
+
+                        def submit():  # Creating Function to Graph the Function After Constants Have Been Inputted
+                            a = float(first_var_entry.get())  # Retrieving Input From 'first_var_entry'
+                            b = float(second_var_entry.get())  # Retrieving Input From 'second_var_entry'
+                            c = float(third_var_entry.get())  # Retrieving Input From 'third_var_entry'
+                            d = float(fourth_var_entry.get())  # Retrieving Input From 'fourth_var_entry'
+
+                            x = np.arange(-10, 10, 0.1)  # 100 Spaced Numbers, x-axis Ranging From -2pi to 2pi
+
+                            # Defining Global Integral Function
+                            global integral_function
+
+                            if saved_function_list[index].set == "ordinary":  # Defining Condition When Set_Type is Identified
+                                y = (a * np.sin(b * (x + c))) + d  # Creating Function
+                                integral_function = f"({a} * np.sin({b} * (x + {c}))) + {d}"  # Turning Function into String
+                            else:
+                                y = (a * np.sinh(b * (x + c))) + d  # Creating Function
+                                integral_function = f"({a} * np.sinh({b} * (x + {c}))) + {d}"  # Turning Function into String
+
+                            fig = plt.figure()  # Creating Figure
+                            plot = fig.add_subplot(1, 1, 1)  # Defining Plot
+                            plot.plot(x, y, "#2C5F2DFF")  # Plotting Function
+
+                            plot.grid()  # Plotting Grid
+
+                            canvas = FigureCanvasTkAgg(fig, self.master)  # Creating Canvas & Displaying Function on Window
+                            canvas.get_tk_widget().place(x=600, y=100)  # Setting Position for Canvas
+
+                        def save(a, b, c, d):  # Creating New Function to Save Functions
+                            name = simpledialog.askstring(title="Naming Function", prompt="What would you like to call this function?:")  # Making Pop-Up Box for Naming Function
+
+                            textfile = open(SAVED_FUNCTIONS_PATH, "a", encoding="UTF8", newline="")  # Opening CSV File to Append New Function
+                            writer = csv.writer(textfile)  # Allowing Writing Compatibilities
+                            if saved_function_list[index].set == "ordinary":
+                                data = [name, "trigonometric", "NA", "ordinary", "sine", str(a), str(b), str(c), str(d), "NA", "NA", "NA"]  # Data to be Written in File
+                            else:
+                                data = [name, "trigonometric", "NA", "hyperbolic", "sine", str(a), str(b), str(c), str(d), "NA", "NA", "NA"]  # Data to be Written in File
+
+                            writer.writerow(data)  # Adding New Function
+
+                        if saved_function_list[index].set == "ordinary":  # Defining Condition When Set_Type is Identified
+                            function_label = Label(self.master, text="f(x) = a * sin(b(x+c)) + d", font=(FONT_FAMILY, 15))  # Creating Label
+                        else:
+                            function_label = Label(self.master, text="f(x) = a * sinh(b(x+c)) + d", font=(FONT_FAMILY, 15))  # Creating Label
+
+                        function_label.place(x=60, y=320)
+
+                        lbl_a = Label(self.master, text="a", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_a.place(x=75, y=350)  # Defining Location for Label
+                        lbl_b = Label(self.master, text="b", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_b.place(x=125, y=350)  # Defining Location for Label
+                        lbl_c = Label(self.master, text="c", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_c.place(x=180, y=350)  # Defining Location for Label
+                        lbl_d = Label(self.master, text="d", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_d.place(x=235, y=350)  # Defining Location for Label
+
+                        first_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        first_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=first_var_entry)  # Defining New Entry Box for Constant 'a'
+                        first_var_entry.place(x=60, y=370)  # Defining Location for Entry Box
+                        first_var_entry.insert(0, saved_function_list[index].a)  # Autofilling Saved Values
+
+                        second_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        second_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=second_var_entry)  # Defining New Entry Box for Constant 'b'
+                        second_var_entry.place(x=115, y=370)  # Defining Location for Entry Box
+                        second_var_entry.insert(0, saved_function_list[index].b)  # Autofilling Saved Values
+
+                        third_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        third_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=third_var_entry)  # Defining New Entry Box for Constant 'c'
+                        third_var_entry.place(x=170, y=370)  # Defining Location for Entry Box
+                        third_var_entry.insert(0, saved_function_list[index].c)  # Autofilling Saved Values
+
+                        fourth_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        fourth_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=fourth_var_entry)  # Defining New Entry Box for Constant 'd'
+                        fourth_var_entry.place(x=225, y=370)  # Defining Location for Entry Box
+                        fourth_var_entry.insert(0, saved_function_list[index].d)  # Autofilling Saved Values
+
+                        submit()
+
+                        confirm_btn = Button(self.master, text="Confirm", command=submit, font=(FONT_FAMILY, 15))  # Creating Confirm Button
+                        confirm_btn.place(x=270, y=370)  # Defining Location for Confirm Button
+
+                        btn = Button(
+                            self.master,
+                            text="Save",
+                            bd="5",
+                            command=lambda: save(float(first_var_entry.get()), float(second_var_entry.get()), float(third_var_entry.get()), float(fourth_var_entry.get())),
+                        )  # Creating Button to Save Function
+                        btn.place(x=100, y=20)  # Defining Location for Button
+
+                    elif saved_function_list[index].type == "cosine":
+
+                        def submit():  # Creating Function to Graph the Function After Constants Have Been Inputted
+                            a = float(first_var_entry.get())  # Retrieving Input From 'first_var_entry'
+                            b = float(second_var_entry.get())  # Retrieving Input From 'second_var_entry'
+                            c = float(third_var_entry.get())  # Retrieving Input From 'third_var_entry'
+                            d = float(fourth_var_entry.get())  # Retrieving Input From 'fourth_var_entry'
+
+                            x = np.arange(-10, 10, 0.1)  # Spacing numbers along the x-axis Ranging From -10 to 10
+
+                            # Defining Global Integral Function
+                            global integral_function
+
+                            if saved_function_list[index].set == "ordinary":  # Defining Condition When Set_Type is Identified
+                                y = (a * np.cos(b * (x + c))) + d  # Creating Function
+                                integral_function = f"({a} * np.cos({b} * (x + {c}))) + {d}"  # Turning Function into String
+                            else:
+                                y = (a * np.cosh(b * (x + c))) + d  # Creating Function
+                                integral_function = f"({a} * np.cosh({b} * (x + {c}))) + {d}"  # Turning Function into String
+
+                            fig = plt.figure()  # Creating Figure
+                            plot = fig.add_subplot(1, 1, 1)  # Defining Plot
+                            plot.plot(x, y, "#2C5F2DFF")  # Plotting Function
+
+                            plot.grid()  # Plotting Grid
+
+                            canvas = FigureCanvasTkAgg(fig, self.master)  # Creating Canvas & Displaying Function on Window
+                            canvas.get_tk_widget().place(x=600, y=100)  # Setting Position for Canvas
+
+                        def save(a, b, c, d):  # Creating New Function to Save Functions
+                            name = simpledialog.askstring(title="Naming Function", prompt="What would you like to call this function?:")  # Making Pop-Up Box for Naming Function
+
+                            textfile = open(SAVED_FUNCTIONS_PATH, "a", encoding="UTF8", newline="")  # Opening CSV File to Append New Function
+                            writer = csv.writer(textfile)  # Allowing Writing Compatibilities
+                            if saved_function_list[index].set == "ordinary":
+                                data = [name, "trigonometric", "NA", "ordinary", "cosine", str(a), str(b), str(c), str(d), "NA", "NA", "NA"]  # Data to be Written in File
+                            else:
+                                data = [name, "trigonometric", "NA", "hyperbolic", "cosine", str(a), str(b), str(c), str(d), "NA", "NA", "NA"]  # Data to be Written in File
+
+                            writer.writerow(data)  # Adding New Function
+
+                        if saved_function_list[index].set == "ordinary":  # Defining Condition When Set_Type is Identified
+                            function_label = Label(self.master, text="f(x) = a * cos(b(x+c)) + d", font=(FONT_FAMILY, 15))  # Creating Label
+                        else:
+                            function_label = Label(self.master, text="f(x) = a * cosh(b(x+c)) + d", font=(FONT_FAMILY, 15))  # Creating Label
+
+                        function_label.place(x=60, y=320)
+                        lbl_a = Label(self.master, text="a", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_a.place(x=75, y=350)  # Defining Location for Label
+                        lbl_b = Label(self.master, text="b", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_b.place(x=125, y=350)  # Defining Location for Label
+                        lbl_c = Label(self.master, text="c", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_c.place(x=180, y=350)  # Defining Location for Label
+                        lbl_d = Label(self.master, text="d", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_d.place(x=235, y=350)  # Defining Location for Label
+
+                        first_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        first_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=first_var_entry)  # Defining New Entry Box for Constant 'a'
+                        first_var_entry.place(x=60, y=370)  # Defining Location for Entry Box
+                        first_var_entry.insert(0, saved_function_list[index].a)  # Autofilling Saved Values
+
+                        second_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        second_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=second_var_entry)  # Defining New Entry Box for Constant 'b'
+                        second_var_entry.place(x=115, y=370)  # Defining Location for Entry Box
+                        second_var_entry.insert(0, saved_function_list[index].b)  # Autofilling Saved Values
+
+                        third_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        third_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=third_var_entry)  # Defining New Entry Box for Constant 'c'
+                        third_var_entry.place(x=170, y=370)  # Defining Location for Entry Box
+                        third_var_entry.insert(0, saved_function_list[index].c)  # Autofilling Saved Values
+
+                        fourth_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        fourth_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=fourth_var_entry)  # Defining New Entry Box for Constant 'd'
+                        fourth_var_entry.place(x=225, y=370)  # Defining Location for Entry Box
+                        fourth_var_entry.insert(0, saved_function_list[index].d)  # Autofilling Saved Values
+
+                        submit()
+
+                        confirm_btn = Button(self.master, text="Confirm", command=submit, font=(FONT_FAMILY, 15))  # Creating Confirm Button
+                        confirm_btn.place(x=270, y=370)  # Defining Location for Confirm Button
+
+                        btn = Button(
+                            self.master,
+                            text="Save",
+                            bd="5",
+                            command=lambda: save(float(first_var_entry.get()), float(second_var_entry.get()), float(third_var_entry.get()), float(fourth_var_entry.get())),
+                        )  # Creating Button to Save Function
+                        btn.place(x=100, y=20)  # Defining Location for Button
+
+                    elif saved_function_list[index].type == "tangent":
+
+                        def submit():  # Creating Function to Graph the Function After Constants Have Been Inputted
+                            a = float(first_var_entry.get())  # Retrieving Input From 'first_var_entry'
+                            b = float(second_var_entry.get())  # Retrieving Input From 'second_var_entry'
+                            c = float(third_var_entry.get())  # Retrieving Input From 'third_var_entry'
+                            d = float(fourth_var_entry.get())  # Retrieving Input From 'fourth_var_entry'
+
+                            x = np.arange(-10, 10, 0.1)  # Spacing numbers along the x-axis Ranging From -10 to 10
+
+                            # Defining Global Integral Function
+                            global integral_function
+
+                            if saved_function_list[index].set == "ordinary":  # Defining Condition When Set_Type is Identified
+                                y = (a * np.tan(b * (x + c))) + d  # Creating Function
+                                integral_function = f"({a} * np.tan({b} * (x + {c}))) + {d}"  # Turning Function into String
+                            else:
+                                y = (a * np.tanh(b * (x + c))) + d  # Creating Function
+                                integral_function = f"({a} * np.tanh({b} * (x + {c}))) + {d}"  # Turning Function into String
+
+                            fig = plt.figure()  # Creating Figure
+                            plot = fig.add_subplot(1, 1, 1)  # Defining Plot
+                            plot.plot(x, y, "#2C5F2DFF")  # Plotting Function
+
+                            plot.grid()  # Plotting Grid
+
+                            canvas = FigureCanvasTkAgg(fig, self.master)  # Creating Canvas & Displaying Function on Window
+                            canvas.get_tk_widget().place(x=600, y=100)  # Setting Position for Canvas
+
+                        def save(a, b, c, d):  # Creating New Function to Save Functions
+                            name = simpledialog.askstring(title="Naming Function", prompt="What would you like to call this function?:")  # Making Pop-Up Box for Naming Function
+
+                            textfile = open(SAVED_FUNCTIONS_PATH, "a", encoding="UTF8", newline="")  # Opening CSV File to Append New Function
+                            writer = csv.writer(textfile)  # Allowing Writing Compatibilities
+                            if saved_function_list[index].set == "ordinary":
+                                data = [name, "trigonometric", "NA", "ordinary", "tangent", str(a), str(b), str(c), str(d), "NA", "NA", "NA"]  # Data to be Written in File
+                            else:
+                                data = [name, "trigonometric", "NA", "hyperbolic", "tangent", str(a), str(b), str(c), str(d), "NA", "NA", "NA"]  # Data to be Written in File
+
+                            writer.writerow(data)  # Adding New Function
+
+                        if saved_function_list[index].set == "ordinary":  # Defining Condition When Set_Type is Identified
+                            function_label = Label(self.master, text="f(x) = a * tan(b(x+c)) + d", font=(FONT_FAMILY, 15))  # Creating Label
+                        else:
+                            function_label = Label(self.master, text="f(x) = a * tanh(b(x+c)) + d", font=(FONT_FAMILY, 15))  # Creating Label
+
+                        function_label.place(x=60, y=320)
+                        lbl_a = Label(self.master, text="a", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_a.place(x=75, y=350)  # Defining Location for Label
+                        lbl_b = Label(self.master, text="b", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_b.place(x=125, y=350)  # Defining Location for Label
+                        lbl_c = Label(self.master, text="c", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_c.place(x=180, y=350)  # Defining Location for Label
+                        lbl_d = Label(self.master, text="d", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_d.place(x=235, y=350)  # Defining Location for Label
+
+                        first_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        first_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=first_var_entry)  # Defining New Entry Box for Constant 'a'
+                        first_var_entry.place(x=60, y=370)  # Defining Location for Entry Box
+                        first_var_entry.insert(0, saved_function_list[index].a)  # Autofilling Saved Values
+
+                        second_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        second_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=second_var_entry)  # Defining New Entry Box for Constant 'b'
+                        second_var_entry.place(x=115, y=370)  # Defining Location for Entry Box
+                        second_var_entry.insert(0, saved_function_list[index].b)  # Autofilling Saved Values
+
+                        third_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        third_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=third_var_entry)  # Defining New Entry Box for Constant 'c'
+                        third_var_entry.place(x=170, y=370)  # Defining Location for Entry Box
+                        third_var_entry.insert(0, saved_function_list[index].c)  # Autofilling Saved Values
+
+                        fourth_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        fourth_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=fourth_var_entry)  # Defining New Entry Box for Constant 'd'
+                        fourth_var_entry.place(x=225, y=370)  # Defining Location for Entry Box
+                        fourth_var_entry.insert(0, saved_function_list[index].d)  # Autofilling Saved Values
+
+                        submit()
+
+                        confirm_btn = Button(self.master, text="Confirm", command=submit, font=(FONT_FAMILY, 15))  # Creating Confirm Button
+                        confirm_btn.place(x=270, y=370)  # Defining Location for Confirm Button
+
+                        btn = Button(
+                            self.master,
+                            text="Save",
+                            bd="5",
+                            command=lambda: save(float(first_var_entry.get()), float(second_var_entry.get()), float(third_var_entry.get()), float(fourth_var_entry.get())),
+                        )  # Creating Button to Save Function
+                        btn.place(x=100, y=20)  # Defining Location for Button
+
+                    elif saved_function_list[index].type == "cosecant":
+
+                        def submit():  # Creating Function to Graph the Function After Constants Have Been Inputted
+                            a = float(first_var_entry.get())  # Retrieving Input From 'first_var_entry'
+                            b = float(second_var_entry.get())  # Retrieving Input From 'second_var_entry'
+                            c = float(third_var_entry.get())  # Retrieving Input From 'third_var_entry'
+                            d = float(fourth_var_entry.get())  # Retrieving Input From 'fourth_var_entry'
+
+                            x = np.arange(-10, 10, 0.1)  # Spacing numbers along the x-axis Ranging From -10 to 10
+
+                            # Defining Global Integral Function
+                            global integral_function
+
+                            if saved_function_list[index].set == "ordinary":  # Defining Condition When Set_Type is Identified
+                                y = (a * np.arcsin(b * (x + c))) + d  # Creating Function
+                                integral_function = f"({a} * np.arcsin({b} * (x + {c}))) + {d}"  # Turning Function into String
+                            else:
+                                y = (a * np.arcsinh(b * (x + c))) + d  # Creating Function
+                                integral_function = f"({a} * np.arcsinh({b} * (x + {c}))) + {d}"  # Turning Function into String
+
+                            fig = plt.figure()  # Creating Figure
+                            plot = fig.add_subplot(1, 1, 1)  # Defining Plot
+                            plot.plot(x, y, "#2C5F2DFF")  # Plotting Function
+
+                            plot.grid()  # Plotting Grid
+
+                            canvas = FigureCanvasTkAgg(fig, self.master)  # Creating Canvas & Displaying Function on Window
+                            canvas.get_tk_widget().place(x=600, y=100)  # Setting Position for Canvas
+
+                        def save(a, b, c, d):  # Creating New Function to Save Functions
+                            name = simpledialog.askstring(title="Naming Function", prompt="What would you like to call this function?:")  # Making Pop-Up Box for Naming Function
+
+                            textfile = open(SAVED_FUNCTIONS_PATH, "a", encoding="UTF8", newline="")  # Opening CSV File to Append New Function
+                            writer = csv.writer(textfile)  # Allowing Writing Compatibilities
+                            if saved_function_list[index].set == "ordinary":
+                                data = [name, "trigonometric", "NA", "ordinary", "cosecant", str(a), str(b), str(c), str(d), "NA", "NA", "NA"]  # Data to be Written in File
+                            else:
+                                data = [name, "trigonometric", "NA", "hyperbolic", "cosecant", str(a), str(b), str(c), str(d), "NA", "NA", "NA"]  # Data to be Written in File
+
+                            writer.writerow(data)  # Adding New Function
+
+                        if saved_function_list[index].set == "ordinary":  # Defining Condition When Set_Type is Identified
+                            function_label = Label(self.master, text="f(x) = a * csc(b(x+c)) + d", font=(FONT_FAMILY, 15))  # Creating Label
+                        else:
+                            function_label = Label(self.master, text="f(x) = a * csch(b(x+c)) + d", font=(FONT_FAMILY, 15))  # Creating Label
+
+                        function_label.place(x=60, y=320)
+                        lbl_a = Label(self.master, text="a", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_a.place(x=75, y=350)  # Defining Location for Label
+                        lbl_b = Label(self.master, text="b", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_b.place(x=125, y=350)  # Defining Location for Label
+                        lbl_c = Label(self.master, text="c", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_c.place(x=180, y=350)  # Defining Location for Label
+                        lbl_d = Label(self.master, text="d", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_d.place(x=235, y=350)  # Defining Location for Label
+
+                        first_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        first_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=first_var_entry)  # Defining New Entry Box for Constant 'a'
+                        first_var_entry.place(x=60, y=370)  # Defining Location for Entry Box
+                        first_var_entry.insert(0, saved_function_list[index].a)  # Autofilling Saved Values
+
+                        second_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        second_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=second_var_entry)  # Defining New Entry Box for Constant 'b'
+                        second_var_entry.place(x=115, y=370)  # Defining Location for Entry Box
+                        second_var_entry.insert(0, saved_function_list[index].b)  # Autofilling Saved Values
+
+                        third_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        third_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=third_var_entry)  # Defining New Entry Box for Constant 'c'
+                        third_var_entry.place(x=170, y=370)  # Defining Location for Entry Box
+                        third_var_entry.insert(0, saved_function_list[index].c)  # Autofilling Saved Values
+
+                        fourth_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        fourth_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=fourth_var_entry)  # Defining New Entry Box for Constant 'd'
+                        fourth_var_entry.place(x=225, y=370)  # Defining Location for Entry Box
+                        fourth_var_entry.insert(0, saved_function_list[index].d)  # Autofilling Saved Values
+
+                        submit()
+
+                        confirm_btn = Button(self.master, text="Confirm", command=submit, font=(FONT_FAMILY, 15))  # Creating Confirm Button
+                        confirm_btn.place(x=270, y=370)  # Defining Location for Confirm Button
+
+                        btn = Button(
+                            self.master,
+                            text="Save",
+                            bd="5",
+                            command=lambda: save(float(first_var_entry.get()), float(second_var_entry.get()), float(third_var_entry.get()), float(fourth_var_entry.get())),
+                        )  # Creating Button to Save Function
+                        btn.place(x=100, y=20)  # Defining Location for Button
+
+                    elif saved_function_list[index].type == "secant":
+
+                        def submit():  # Creating Function to Graph the Function After Constants Have Been Inputted
+                            a = float(first_var_entry.get())  # Retrieving Input From 'first_var_entry'
+                            b = float(second_var_entry.get())  # Retrieving Input From 'second_var_entry'
+                            c = float(third_var_entry.get())  # Retrieving Input From 'third_var_entry'
+                            d = float(fourth_var_entry.get())  # Retrieving Input From 'fourth_var_entry'
+
+                            x = np.arange(-10, 10, 0.1)  # Spacing numbers along the x-axis Ranging From -10 to 10
+
+                            # Defining Global Integral Function
+                            global integral_function
+
+                            if saved_function_list[index].set == "ordinary":  # Defining Condition When Set_Type is Identified
+                                y = (a * np.arccos(b * (x + c))) + d  # Creating Function
+                                integral_function = f"({a} * np.arccos({b} * (x + {c}))) + {d}"  # Turning Function into String
+                            else:
+                                y = (a * np.arccosh(b * (x + c))) + d  # Creating Function
+                                integral_function = f"({a} * np.arccosh({b} * (x + {c}))) + {d}"  # Turning Function into String
+
+                            fig = plt.figure()  # Creating Figure
+                            plot = fig.add_subplot(1, 1, 1)  # Defining Plot
+                            plot.plot(x, y, "#2C5F2DFF")  # Plotting Function
+
+                            plot.grid()  # Plotting Grid
+
+                            canvas = FigureCanvasTkAgg(fig, self.master)  # Creating Canvas & Displaying Function on Window
+                            canvas.get_tk_widget().place(x=600, y=100)  # Setting Position for Canvas
+
+                        def save(a, b, c, d):  # Creating New Function to Save Functions
+                            name = simpledialog.askstring(title="Naming Function", prompt="What would you like to call this function?:")  # Making Pop-Up Box for Naming Function
+
+                            textfile = open(SAVED_FUNCTIONS_PATH, "a", encoding="UTF8", newline="")  # Opening CSV File to Append New Function
+                            writer = csv.writer(textfile)  # Allowing Writing Compatibilities
+                            if saved_function_list[index].set == "ordinary":
+                                data = [name, "trigonometric", "NA", "ordinary", "secant", str(a), str(b), str(c), str(d), "NA", "NA", "NA"]  # Data to be Written in File
+                            else:
+                                data = [name, "trigonometric", "NA", "hyperbolic", "secant", str(a), str(b), str(c), str(d), "NA", "NA", "NA"]  # Data to be Written in File
+
+                            writer.writerow(data)  # Adding New Function
+
+                        if saved_function_list[index].set == "ordinary":  # Defining Condition When Set_Type is Identified
+                            function_label = Label(self.master, text="f(x) = a * sec(b(x+c)) + d", font=(FONT_FAMILY, 15))  # Creating Label
+                        else:
+                            function_label = Label(self.master, text="f(x) = a * sech(b(x+c)) + d", font=(FONT_FAMILY, 15))  # Creating Label
+
+                        function_label.place(x=60, y=320)
+                        lbl_a = Label(self.master, text="a", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_a.place(x=75, y=350)  # Defining Location for Label
+                        lbl_b = Label(self.master, text="b", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_b.place(x=125, y=350)  # Defining Location for Label
+                        lbl_c = Label(self.master, text="c", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_c.place(x=180, y=350)  # Defining Location for Label
+                        lbl_d = Label(self.master, text="d", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_d.place(x=235, y=350)  # Defining Location for Label
+
+                        first_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        first_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=first_var_entry)  # Defining New Entry Box for Constant 'a'
+                        first_var_entry.place(x=60, y=370)  # Defining Location for Entry Box
+                        first_var_entry.insert(0, saved_function_list[index].a)  # Autofilling Saved Values
+
+                        second_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        second_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=second_var_entry)  # Defining New Entry Box for Constant 'b'
+                        second_var_entry.place(x=115, y=370)  # Defining Location for Entry Box
+                        second_var_entry.insert(0, saved_function_list[index].b)  # Autofilling Saved Values
+
+                        third_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        third_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=third_var_entry)  # Defining New Entry Box for Constant 'c'
+                        third_var_entry.place(x=170, y=370)  # Defining Location for Entry Box
+                        third_var_entry.insert(0, saved_function_list[index].c)  # Autofilling Saved Values
+
+                        fourth_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        fourth_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=fourth_var_entry)  # Defining New Entry Box for Constant 'd'
+                        fourth_var_entry.place(x=225, y=370)  # Defining Location for Entry Box
+                        fourth_var_entry.insert(0, saved_function_list[index].d)  # Autofilling Saved Values
+
+                        submit()
+
+                        confirm_btn = Button(self.master, text="Confirm", command=submit, font=(FONT_FAMILY, 15))  # Creating Confirm Button
+                        confirm_btn.place(x=270, y=370)  # Defining Location for Confirm Button
+
+                        btn = Button(
+                            self.master,
+                            text="Save",
+                            bd="5",
+                            command=lambda: save(float(first_var_entry.get()), float(second_var_entry.get()), float(third_var_entry.get()), float(fourth_var_entry.get())),
+                        )  # Creating Button to Save Function
+                        btn.place(x=100, y=20)  # Defining Location for Button
+
+                    elif saved_function_list[index].type == "cotangent":
+
+                        def submit():  # Creating Function to Graph the Function After Constants Have Been Inputted
+                            a = float(first_var_entry.get())  # Retrieving Input From 'first_var_entry'
+                            b = float(second_var_entry.get())  # Retrieving Input From 'second_var_entry'
+                            c = float(third_var_entry.get())  # Retrieving Input From 'third_var_entry'
+                            d = float(fourth_var_entry.get())  # Retrieving Input From 'fourth_var_entry'
+
+                            x = np.arange(-10, 10, 0.1)  # Spacing numbers along the x-axis Ranging From -10 to 10
+
+                            # Defining Global Integral Function
+                            global integral_function
+
+                            if saved_function_list[index].set == "ordinary":  # Defining Condition When Set_Type is Identified
+                                y = (a * np.arctan(b * (x + c))) + d  # Creating Function
+                                integral_function = f"({a} * np.arctan({b} * (x + {c}))) + {d}"  # Turning Function into String
+                            else:
+                                y = (a * np.arctanh(b * (x + c))) + d  # Creating Function
+                                integral_function = f"({a} * np.arctanh({b} * (x + {c}))) + {d}"  # Turning Function into String
+
+                            fig = plt.figure()  # Creating Figure
+                            plot = fig.add_subplot(1, 1, 1)  # Defining Plot
+                            plot.plot(x, y, "#2C5F2DFF")  # Plotting Function
+
+                            plot.grid()  # Plotting Grid
+
+                            canvas = FigureCanvasTkAgg(fig, self.master)  # Creating Canvas & Displaying Function on Window
+                            canvas.get_tk_widget().place(x=600, y=100)  # Setting Position for Canvas
+
+                        def save(a, b, c, d):  # Creating New Function to Save Functions
+                            name = simpledialog.askstring(title="Naming Function", prompt="What would you like to call this function?:")  # Making Pop-Up Box for Naming Function
+
+                            textfile = open(SAVED_FUNCTIONS_PATH, "a", encoding="UTF8", newline="")  # Opening CSV File to Append New Function
+                            writer = csv.writer(textfile)  # Allowing Writing Compatibilities
+                            if saved_function_list[index].set == "ordinary":
+                                data = [name, "trigonometric", "NA", "ordinary", "cotangent", str(a), str(b), str(c), str(d), "NA", "NA", "NA"]  # Data to be Written in File
+                            else:
+                                data = [name, "trigonometric", "NA", "hyperbolic", "cotanget", str(a), str(b), str(c), str(d), "NA", "NA", "NA"]  # Data to be Written in File
+
+                            writer.writerow(data)  # Adding New Function
+
+                        if saved_function_list[index].set == "ordinary":  # Defining Condition When Set_Type is Identified
+                            function_label = Label(self.master, text="f(x) = a * cot(b(x+c)) + d", font=(FONT_FAMILY, 15))  # Creating Label
+                        else:
+                            function_label = Label(self.master, text="f(x) = a * coth(b(x+c)) + d", font=(FONT_FAMILY, 15))  # Creating Label
+
+                        function_label.place(x=60, y=320)
+                        lbl_a = Label(self.master, text="a", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_a.place(x=75, y=350)  # Defining Location for Label
+                        lbl_b = Label(self.master, text="b", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_b.place(x=125, y=350)  # Defining Location for Label
+                        lbl_c = Label(self.master, text="c", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_c.place(x=180, y=350)  # Defining Location for Label
+                        lbl_d = Label(self.master, text="d", font=(FONT_FAMILY, 15))  # Creating New Label
+                        lbl_d.place(x=235, y=350)  # Defining Location for Label
+
+                        first_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        first_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=first_var_entry)  # Defining New Entry Box for Constant 'a'
+                        first_var_entry.place(x=60, y=370)  # Defining Location for Entry Box
+                        first_var_entry.insert(0, saved_function_list[index].a)  # Autofilling Saved Values
+
+                        second_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        second_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=second_var_entry)  # Defining New Entry Box for Constant 'b'
+                        second_var_entry.place(x=115, y=370)  # Defining Location for Entry Box
+                        second_var_entry.insert(0, saved_function_list[index].b)  # Autofilling Saved Values
+
+                        third_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        third_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=third_var_entry)  # Defining New Entry Box for Constant 'c'
+                        third_var_entry.place(x=170, y=370)  # Defining Location for Entry Box
+                        third_var_entry.insert(0, saved_function_list[index].c)  # Autofilling Saved Values
+
+                        fourth_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                        fourth_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=fourth_var_entry)  # Defining New Entry Box for Constant 'd'
+                        fourth_var_entry.place(x=225, y=370)  # Defining Location for Entry Box
+                        fourth_var_entry.insert(0, saved_function_list[index].d)  # Autofilling Saved Values
+
+                        submit()
+
+                        confirm_btn = Button(self.master, text="Confirm", command=submit, font=(FONT_FAMILY, 15))  # Creating Confirm Button
+                        confirm_btn.place(x=270, y=370)  # Defining Location for Confirm Button
+
+                        btn = Button(
+                            self.master,
+                            text="Save",
+                            bd="5",
+                            command=lambda: save(float(first_var_entry.get()), float(second_var_entry.get()), float(third_var_entry.get()), float(fourth_var_entry.get())),
+                        )  # Creating Button to Save Function
+                        btn.place(x=100, y=20)  # Defining Location for Button
+
+                elif saved_function_list[index].function == "exponential":
+
+                    def submit():  # Creating New Function When 'Confirm' Button is Clicked
+                        first_var = float(first_var_entry.get())  # Retrieving Input From 'first_var_entry'
+                        second_var = float(second_var_entry.get())  # Retrieving Input From 'second_var_entry'
+                        third_var = float(third_var_entry.get())  # Retrieving Input From 'third_var_entry'
+
+                        x = np.arange(-10, 10, 0.1)  # Spacing Numbers on Axis
+                        y = first_var * np.exp(x * second_var) + third_var  # Creating Function Using Retrieved Values
+
+                        # Defining Global Integral Function
+                        global integral_function
+                        integral_function = y
+
+                        fig = plt.figure()  # Creating Figure
+
+                        plot = fig.add_subplot(1, 1, 1)  # Defining Plot
+                        plot.plot(x, y, "#2C5F2DFF")  # Plotting Function
+
+                        plot.grid()  # Plotting Grid
+
+                        canvas = FigureCanvasTkAgg(fig, self.master)  # Creating Canvas & Displaying Function on Window
+                        canvas.get_tk_widget().place(x=600, y=100)  # Setting Position for Canvas
+
+                    def save(a, b, c):  # Creating New Function to Save Functions
+                        name = simpledialog.askstring(title="Naming Function", prompt="What would you like to call this function?:")  # Making Pop-Up Box for Naming Function
+
+                        textfile = open(SAVED_FUNCTIONS_PATH, "a", encoding="UTF8", newline="")  # Opening CSV File to Append New Function
+                        writer = csv.writer(textfile)  # Allowing Writing Compatibilities
+                        data = [name, "exponential", "NA", "NA", "NA", str(a), str(b), str(c), "NA", "NA", "NA", "NA"]  # Data to be Written in File
+                        writer.writerow(data)  # Adding New Function
+
+                    lbl2 = Label(self.master, text="f(x) = a * e ^ bx + c", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl2.place(x=60, y=270)  # Defining Location for Label
+
+                    first_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                    first_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=first_var_entry)  # Defining New Entry Box for Constant 'a'
+                    first_var_entry.place(x=60, y=320)  # Defining Location for Entry Box
+                    first_var_entry.insert(0, saved_function_list[index].a)  # Autofilling Saved Values
+
+                    second_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                    second_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=second_var_entry)  # Defining New Entry Box for Constant 'b'
+                    second_var_entry.place(x=115, y=320)  # Defining Location for Entry Box
+                    second_var_entry.insert(0, saved_function_list[index].b)  # Autofilling Saved Values
+
+                    third_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                    third_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=third_var_entry)  # Defining New Entry Box for Constant 'c'
+                    third_var_entry.place(x=170, y=320)  # Defining Location for Entry Box
+                    third_var_entry.insert(0, saved_function_list[index].c)  # Autofilling Saved Values
+
+                    lbl_a = Label(self.master, text="a", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl_a.place(x=75, y=300)  # Defining Location for Label
+                    lbl_b = Label(self.master, text="b", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl_b.place(x=125, y=300)  # Defining Location for Label
+                    lbl_c = Label(self.master, text="c", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl_c.place(x=180, y=300)  # Defining Location for Label
+
+                    submit()
+
+                    confirm_btn = Button(self.master, text="Confirm", command=submit, font=(FONT_FAMILY, 15))  # Creating Confirm Button
+                    confirm_btn.place(x=210, y=320)  # Defining Location for Confirm Button
+
+                    btn = Button(
+                        self.master, text="Save", bd="5", command=lambda: save(float(first_var_entry.get()), float(second_var_entry.get()), float(third_var_entry.get()))
+                    )  # Creating Button to Save Function
+                    btn.place(x=100, y=20)  # Defining Location for Button
+
+                elif saved_function_list[index].function == "logarithmic":
+
+                    def submit():  # Creating New Function When 'Confirm' Button is Clicked
+                        first_var = float(first_var_entry.get())  # Retrieving Input From 'first_var_entry'
+                        second_var = float(second_var_entry.get())  # Retrieving Input From 'second_var_entry'
+                        third_var = float(third_var_entry.get())  # Retrieving Input From 'third_var_entry'
+
+                        x = np.arange(-10, 10, 0.1)  # Spacing Numbers on Axis
+                        y = first_var * np.log(second_var * x) + third_var  # Creating Function Using Retrieved Values
+
+                        # Defining Global Integral Function
+                        global integral_function
+                        integral_function = str(first_var) + " * np.log(" + str(second_var) + " * x) + " + str(third_var)  # Turning Function into String
+
+                        fig = plt.figure()  # Creating Figure
+
+                        plot = fig.add_subplot(1, 1, 1)  # Defining Plot
+                        plot.plot(x, y, "#2C5F2DFF")  # Plotting Function
+
+                        plot.grid()  # Plotting Grid
+
+                        canvas = FigureCanvasTkAgg(fig, self.master)  # Creating Canvas & Displaying Function on Window
+                        canvas.get_tk_widget().place(x=600, y=100)  # Setting Position for Canvas
+
+                    def save(a, b, c):  # Creating New Function to Save Functions
+                        name = simpledialog.askstring(title="Naming Function", prompt="What would you like to call this function?:")  # Making Pop-Up Box for Naming Function
+
+                        textfile = open(SAVED_FUNCTIONS_PATH, "a", encoding="UTF8", newline="")  # Opening CSV File to Append New Function
+                        writer = csv.writer(textfile)  # Allowing Writing Compatibilities
+                        data = [name, "logarithmic", "NA", "NA", "NA", str(a), str(b), str(c), "NA", "NA", "NA", "NA"]  # Data to be Written in File
+                        writer.writerow(data)  # Adding New Function
+
+                    lbl2 = Label(self.master, text="f(x) = a * log(bx) + c", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl2.place(x=60, y=270)  # Defining Location for Label
+
+                    first_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                    first_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=first_var_entry)  # Defining New Entry Box for Constant 'a'
+                    first_var_entry.place(x=60, y=320)  # Defining Location for Entry Box
+                    first_var_entry.insert(0, saved_function_list[index].a)  # Autofilling Saved Values
+
+                    second_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                    second_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=second_var_entry)  # Defining New Entry Box for Constant 'b'
+                    second_var_entry.place(x=115, y=320)  # Defining Location for Entry Box
+                    second_var_entry.insert(0, saved_function_list[index].b)  # Autofilling Saved Values
+
+                    third_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                    third_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=third_var_entry)  # Defining New Entry Box for Constant 'c'
+                    third_var_entry.place(x=170, y=320)  # Defining Location for Entry Box
+                    third_var_entry.insert(0, saved_function_list[index].c)  # Autofilling Saved Values
+
+                    lbl_a = Label(self.master, text="a", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl_a.place(x=75, y=300)  # Defining Location for Label
+                    lbl_b = Label(self.master, text="b", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl_b.place(x=125, y=300)  # Defining Location for Label
+                    lbl_c = Label(self.master, text="c", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl_c.place(x=180, y=300)  # Defining Location for Label
+
+                    submit()
+
+                    confirm_btn = Button(self.master, text="Confirm", command=submit, font=(FONT_FAMILY, 15))  # Creating Confirm Button
+                    confirm_btn.place(x=210, y=320)  # Defining Location for Confirm Button
+
+                    btn = Button(
+                        self.master, text="Save", bd="5", command=lambda: save(float(first_var_entry.get()), float(second_var_entry.get()), float(third_var_entry.get()))
+                    )  # Creating Button to Save Function
+                    btn.place(x=100, y=20)  # Defining Location for Button
+
+                elif saved_function_list[index].function == "linear":
+
+                    def submit():  # Creating New Function When 'Confirm' Button is Clicked
+                        first_var = float(first_var_entry.get())  # Retrieving Input From 'first_var_entry'
+                        second_var = float(second_var_entry.get())  # Retrieving Input From 'second_var_entry'
+
+                        x = np.arange(-10, 10, 0.1)  # Spacing Numbers on Axis
+                        y = first_var * x + second_var  # Creating Function Using Retrieved Values
+
+                        # Defining Global Integral Function
+                        global integral_function
+                        integral_function = str(first_var) + " * x + " + str(second_var)
+
+                        fig = plt.figure()  # Creating Figure
+
+                        plot = fig.add_subplot(1, 1, 1)  # Defining Plot
+                        plot.plot(x, y, "#2C5F2DFF")  # Plotting Function
+
+                        plot.grid()  # Plotting Grid
+
+                        canvas = FigureCanvasTkAgg(fig, self.master)  # Creating Canvas & Displaying Function on Window
+                        canvas.get_tk_widget().place(x=600, y=100)  # Setting Position for Canvas
+
+                    def save(a, b):  # Creating New Function to Save Functions
+                        name = simpledialog.askstring(title="Naming Function", prompt="What would you like to call this function?:")  # Making Pop-Up Box for Naming Function
+
+                        textfile = open(SAVED_FUNCTIONS_PATH, "a", encoding="UTF8", newline="")  # Opening CSV File to Append New Function
+                        writer = csv.writer(textfile)  # Allowing Writing Compatibilities
+                        data = [name, "linear", "NA", "NA", "NA", str(a), str(b), "NA", "NA", "NA", "NA", "NA"]  # Data to be Written in File
+                        writer.writerow(data)  # Adding New Function
+
+                    lbl2 = Label(self.master, text="f(x) = ax + b", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl2.place(x=60, y=270)  # Defining Location for Label
+
+                    first_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                    first_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=first_var_entry)  # Defining New Entry Box for Constant 'a'
+                    first_var_entry.place(x=60, y=320)  # Defining Location for Entry Box
+                    first_var_entry.insert(0, saved_function_list[index].a)  # Autofilling Saved Values
+
+                    second_var_entry = StringVar()  # Defining Input Field as String (Entry)
+                    second_var_entry = Entry(self.master, font=(FONT_FAMILY, 15), width=3, textvariable=second_var_entry)  # Defining New Entry Box for Constant 'b'
+                    second_var_entry.place(x=115, y=320)  # Defining Location for Entry Box
+                    second_var_entry.insert(0, saved_function_list[index].b)  # Autofilling Saved Values
+
+                    lbl_a = Label(self.master, text="a", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl_a.place(x=75, y=300)  # Defining Location for Label
+                    lbl_b = Label(self.master, text="b", font=(FONT_FAMILY, 15))  # Creating New Label
+                    lbl_b.place(x=125, y=300)  # Defining Location for Label
+
+                    submit()
+
+                    confirm_btn = Button(self.master, text="Confirm", command=submit, font=(FONT_FAMILY, 15))  # Creating Confirm Button
+                    confirm_btn.place(x=180, y=320)  # Defining Location for Confirm Button
+
+                    btn = Button(self.master, text="Save", bd="5", command=lambda: save(float(first_var_entry.get()), float(second_var_entry.get())))  # Creating Button to Save Function
+                    btn.place(x=100, y=20)  # Defining Location for Button
+
+            cb_saved.bind("<<ComboboxSelected>>", loaded_function)
+
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    MainApplication(root).pack(side="top", fill="both", expand=True)
+    root.mainloop()
